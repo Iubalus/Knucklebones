@@ -43,8 +43,8 @@ public class DAOFillerTest extends WithInMemoryDB {
         }
     }
 
-    @Test
-    public void givenObjectWithInaccessibleProperties_propertyIsNotSet() throws Exception {
+    @Test(expected = DAOFiller.PropertyInaccessible.class)
+    public void givenObjectWithInaccessibleProperties_expectException() throws Exception {
         try (ResultSet results = getConnection().prepareStatement("SELECT A FROM Test").executeQuery()) {
             List<HasInaccessibleProperties> result = DAOFiller.fillFromResultSet(HasInaccessibleProperties.class, results);
             assertThat(result.size(), is(1));

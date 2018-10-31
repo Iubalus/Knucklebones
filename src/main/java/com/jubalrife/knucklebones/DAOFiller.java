@@ -39,7 +39,7 @@ public class DAOFiller {
 
     private static <DAO> Map<Field, Integer> mapFieldsToColumns(Class<DAO> type, ResultSet source) throws SQLException {
         Map<Field, Integer> fieldToColumn = new HashMap<>();
-        for (Field field : type.getFields()) {
+        for (Field field : type.getDeclaredFields()) {
             fieldToColumn.put(field, source.findColumn(field.getName()));
         }
         return fieldToColumn;
