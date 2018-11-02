@@ -1,5 +1,6 @@
 package com;
 
+import com.jubalrife.knucklebones.sql.Runner;
 import org.h2.jdbcx.JdbcConnectionPool;
 import org.junit.After;
 import org.junit.Before;
@@ -14,7 +15,12 @@ public class WithInMemoryDB {
 
     @BeforeClass
     public static final void _setupConnectionPool() throws Exception {
+        if (connectionPool != null) return;
+
         connectionPool = JdbcConnectionPool.create("jdbc:h2:mem:test", "sa", "sa");
+        try (Connection connection = connectionPool.getConnection()) {
+            new Runner().run(connection);
+        }
     }
 
     @Before
