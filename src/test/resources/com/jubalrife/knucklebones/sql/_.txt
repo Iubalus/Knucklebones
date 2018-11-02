@@ -1,0 +1,2 @@
+Used as an anchor to find the sql directory.
+sql files in schema will be run first followed by sql files in data
