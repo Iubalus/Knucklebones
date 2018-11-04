@@ -22,9 +22,9 @@ public class DAOFiller {
                 DAO fill = type.newInstance();
                 for (Map.Entry<Field, Integer> field : fieldToColumn.entrySet()) {
                     try {
-                        field.getKey().set(fill, extractValue(field.getValue(), source));
+                        field.getKey().set(fill, extractValue(field.getKey().getType(), field.getValue(), source));
                     } catch (IllegalAccessException e) {
-                        throw new PropertyInaccessible(field.getKey(), type, e);
+                        throw new KnuckleBonesException.PropertyInaccessible(field.getKey(), type, e);
                     }
                 }
                 filled.add(fill);
@@ -32,7 +32,7 @@ public class DAOFiller {
         } catch (InstantiationException | IllegalAccessException e) {
             throw new CouldNotConstruct(type, e);
         } catch (SQLException e) {
-            throw new CouldNotFetchData(e);
+            throw new KnuckleBonesException.CouldNotFetchData(e);
         }
         return filled;
     }
@@ -45,14 +45,8 @@ public class DAOFiller {
         return fieldToColumn;
     }
 
-    private static Object extractValue(Integer columnIndex, ResultSet source) throws SQLException {
-        return SupportedTypes.getExtractor(source.getMetaData().getColumnType(columnIndex)).extract(columnIndex, source);
-    }
-
-    static class PropertyInaccessible extends KnuckleBonesException {
-        PropertyInaccessible(Field field, Class<?> type, Throwable cause) {
-            super(String.format("Could not access property %s of %s", field.getName(), type.getName()), cause);
-        }
+    private static Object extractValue(Class<?> type, Integer columnIndex, ResultSet source) throws SQLException {
+        return SupportedTypes.getExtractor(source.getMetaData().getColumnType(columnIndex), type).extract(columnIndex, source);
     }
 
     static class CouldNotConstruct extends KnuckleBonesException {
@@ -61,9 +55,4 @@ public class DAOFiller {
         }
     }
 
-    static class CouldNotFetchData extends KnuckleBonesException {
-        public CouldNotFetchData(Throwable cause) {
-            super("Failed to fetch data", cause);
-        }
-    }
 }

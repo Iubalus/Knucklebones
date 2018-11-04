@@ -1,6 +1,7 @@
 package com.jubalrife.knucklebones;
 
 import com.WithInMemoryDB;
+import com.jubalrife.knucklebones.exception.KnuckleBonesException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,7 +44,7 @@ public class DAOFillerTest extends WithInMemoryDB {
         }
     }
 
-    @Test(expected = DAOFiller.PropertyInaccessible.class)
+    @Test(expected = KnuckleBonesException.PropertyInaccessible.class)
     public void givenObjectWithInaccessibleProperties_expectException() throws Exception {
         try (ResultSet results = getConnection().prepareStatement("SELECT A FROM Test").executeQuery()) {
             List<HasInaccessibleProperties> result = DAOFiller.fillFromResultSet(HasInaccessibleProperties.class, results);

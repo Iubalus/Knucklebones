@@ -98,10 +98,4 @@ public class ParameterizedQueryParser {
             super("[:] Must be followed by a parameter name of the form: [a-zA-Z]+", token.getLine(), token.getPosition());
         }
     }
-
-    static class InvalidToken extends ParameterizedQueryException {
-        public InvalidToken(ParameterizedQueryToken token) {
-            super(String.format("Unexpected Token: %s with value [%s]", token.getType(), token.getText()), token.getLine(), token.getPosition());
-        }
-    }
 }

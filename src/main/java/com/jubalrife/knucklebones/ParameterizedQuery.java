@@ -18,11 +18,12 @@ public class ParameterizedQuery {
         this.parameterNames = parameterNames;
     }
 
-    public void fill(PreparedStatement statement) throws SQLException {
+    public List<Object> getParameters() throws SQLException {
+        List<Object> params = new ArrayList<>();
         for (int i = 0; i < parameterNames.size(); i++) {
-            Object o = parameters.get(parameterNames.get(i));
-            SupportedTypes.getRefiner(o == null ? null : o.getClass()).refine(i + 1, o, statement);
+            params.add( parameters.get(parameterNames.get(i)));
         }
+        return params;
     }
 
     public void setParameters(HashMap<String, Object> parameters) {
