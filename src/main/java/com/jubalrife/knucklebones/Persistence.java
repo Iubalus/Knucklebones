@@ -28,7 +28,7 @@ public class Persistence {
 
     @SuppressWarnings("unchecked")
     public <ResultType> ResultType insert(ResultType o) {
-        return new GenericInsert().insert(new DAO<ResultType>((Class<ResultType>) o.getClass()), o, connection);
+        return new GenericInsert().insert(DAOFactory.create((Class<ResultType>) o.getClass()), o, connection);
     }
 
     public class NativeQuery<QueryResultType> {
@@ -48,11 +48,12 @@ public class Persistence {
 
         public List<QueryResultType> findResults() {
             parameterizedQuery.setParameters(parameters);
+            DAO<QueryResultType> dao = DAOFactory.create(type);
 
             PreparedStatementExecutor executor = new PreparedStatementExecutor();
             try (PreparedStatement statement = executor.execute(connection, parameterizedQuery.getQuery(), parameterizedQuery.getParameters())) {
                 try (ResultSet result = statement.executeQuery()) {
-                    return DAOFiller.fillFromResultSet(type, result);
+                    return dao.fillFromResultSet(result);
                 }
             } catch (SQLException e) {
                 throw new CouldNotFetchData(e);

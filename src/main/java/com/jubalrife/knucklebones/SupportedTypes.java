@@ -2,10 +2,8 @@ package com.jubalrife.knucklebones;
 
 import com.jubalrife.knucklebones.exception.KnuckleBonesException;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
+import java.sql.*;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -18,12 +16,19 @@ public class SupportedTypes {
     static {
         registerType(Types.BIGINT, Long.class, (columnIndex, results) -> results.getLong(columnIndex));
         registerType(Types.BIGINT, Long.TYPE, (columnIndex, results) -> results.getLong(columnIndex));
+
         registerType(Types.BIGINT, Integer.TYPE, (columnIndex, results) -> results.getInt(columnIndex));
         registerType(Types.BIGINT, Integer.class, (columnIndex, results) -> results.getInt(columnIndex));
 
         registerType(Types.INTEGER, Integer.TYPE, (columnIndex, results) -> results.getInt(columnIndex));
         registerType(Types.INTEGER, Integer.class, (columnIndex, results) -> results.getInt(columnIndex));
+
         registerType(Types.VARCHAR, String.class, ((columnIndex, results) -> results.getString(columnIndex)));
+
+        registerType(Types.DATE, Date.class, ((columnIndex, results) -> results.getDate(columnIndex)));
+        registerType(Types.TIMESTAMP, Date.class, ((columnIndex, results) -> results.getTimestamp(columnIndex)));
+
+        registerType(Date.class, (index, value, statement) -> statement.setTimestamp(index, new Timestamp(((Date) value).getTime())));
 
         registerType(Integer.TYPE, (index, value, statement) -> statement.setInt(index, (int) value));
         registerType(Integer.class, (index, value, statement) -> statement.setObject(index, (Integer) value));

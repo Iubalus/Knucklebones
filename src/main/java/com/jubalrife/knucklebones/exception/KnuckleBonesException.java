@@ -22,4 +22,9 @@ public class KnuckleBonesException extends RuntimeException {
             super("Failed to fetch data", cause);
         }
     }
+    public static class CouldNotConstruct extends KnuckleBonesException {
+        public CouldNotConstruct(Class<?> type, Throwable cause) {
+            super(String.format("Could not construct instance of %s", type.getName()), cause);
+        }
+    }
 }

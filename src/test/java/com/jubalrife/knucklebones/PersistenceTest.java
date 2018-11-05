@@ -4,9 +4,13 @@ import com.WithInMemoryDB;
 import com.jubalrife.knucklebones.annotation.GeneratedValue;
 import com.jubalrife.knucklebones.annotation.Id;
 import com.jubalrife.knucklebones.annotation.Table;
+import jdk.nashorn.internal.parser.DateParser;
 import org.junit.Test;
 
 import java.sql.SQLException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 import static org.hamcrest.core.Is.is;
@@ -72,6 +76,23 @@ public class PersistenceTest extends WithInMemoryDB {
         assertThat(dao.columnB, is("Hello World"));
     }
 
+    @Test
+    public void testDateInsertAndRetieval() throws ParseException {
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+        Term term = new Term();
+        term.startDate = format.parse("2018-10-01");
+        term.endDate = format.parse("2018-12-15");
+
+        Persistence persistence = new Persistence(getConnection());
+        Term inserted = persistence.insert(term);
+
+
+        Term found = persistence.find(inserted);
+        assertNotNull(found.termId);
+        assertThat(term.startDate, is(found.startDate));
+        assertThat(term.endDate, is(found.endDate));
+    }
+
     @Table(name = "TableA")
     public static class TableADAO {
         public Integer columnA;
@@ -91,5 +112,15 @@ public class PersistenceTest extends WithInMemoryDB {
         public Integer id;
         @GeneratedValue
         public Integer defaultValue;
+    }
+
+    public static class Term {
+        @Id
+        @GeneratedValue
+        public Integer termId;
+
+        public Date startDate;
+
+        public Date endDate;
     }
 }

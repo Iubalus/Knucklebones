@@ -6,14 +6,14 @@ import com.jubalrife.knucklebones.annotation.Id;
 
 import java.lang.reflect.Field;
 
-public class ColumnField {
+class DAOColumnField {
     private final String name;
     private final Field field;
     private final boolean isId;
     private final boolean isGenerated;
 
 
-    public ColumnField(Field field) {
+    public DAOColumnField(Field field) {
         this.field = field;
         this.name = findName(field);
         this.isId = field.isAnnotationPresent(Id.class);
