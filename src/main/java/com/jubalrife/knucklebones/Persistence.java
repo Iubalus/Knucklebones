@@ -1,6 +1,7 @@
 package com.jubalrife.knucklebones;
 
-import com.jubalrife.knucklebones.exception.KnuckleBonesException.CouldNotFetchData;
+import com.jubalrife.knucklebones.dialect.Dialect;
+import com.jubalrife.knucklebones.exception.KnuckleBonesException.*;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -9,33 +10,92 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 
-public class Persistence {
+/**
+ * Created by calling {@link PersistenceFactory#create()}.
+ */
+public class Persistence implements AutoCloseable {
     private Connection connection;
+    private Dialect dialect;
 
-    public Persistence(Connection connection) {
+    Persistence(Connection connection, Dialect dialect) {
         this.connection = connection;
+        this.dialect = dialect;
     }
 
     @SuppressWarnings("unchecked")
     public <ResultType> ResultType find(ResultType item) {
-        return new GenericFindSingle().<ResultType>find(connection, (Class<ResultType>) item.getClass(), item);
+        return dialect.find(connection, DAOFactory.create((Class<ResultType>) item.getClass()), item);
     }
 
     @SuppressWarnings("unchecked")
     public <ResultType> ResultType insert(ResultType o) {
-        return new GenericInsert().insert(DAOFactory.create((Class<ResultType>) o.getClass()), o, connection);
+        return dialect.insert(connection, DAOFactory.create((Class<ResultType>) o.getClass()), o);
     }
 
     public int update(Object o) {
-        return new GenericUpdate().update(DAOFactory.create(o.getClass()), o, connection);
+        return dialect.update(connection, DAOFactory.create(o.getClass()), o);
     }
 
     public int delete(Object o) {
-        return new GenericDelete().delete(connection, DAOFactory.create(o.getClass()), o);
+        return dialect.delete(connection, DAOFactory.create(o.getClass()), o);
     }
 
     public <ResultType> NativeQuery<ResultType> createNativeQuery(String query, Class<ResultType> type) {
         return new NativeQuery<>(type, query);
+    }
+
+    /**
+     * Modifying the underlying connection can lead to undefined behavior.
+     *
+     * @return the underlying {@link Connection}
+     */
+    public Connection getConnection() {
+        return connection;
+    }
+
+    /**
+     * Calling this method will set the underlying connection to stop auto committing each statement.
+     * {@link #commit()} or {@link #rollback()} must be called after this method to either keep or reject changes made in
+     * the transaction that begin creates.
+     */
+    public void begin() {
+        try {
+            connection.setAutoCommit(false);
+        } catch (SQLException e) {
+            throw new CouldNotCreateATransaction(e);
+        }
+
+    }
+
+    /**
+     * Calling this method will rollback the current transaction.
+     * See {@link #begin()} to begin a transaction
+     */
+    public void rollback() {
+        try {
+            connection.rollback();
+        } catch (SQLException e) {
+            throw new CouldNotRollbackATransaction(e);
+        }
+    }
+
+    /**
+     * Calling this method will commit the current transaction.
+     * See {@link #begin()} to begin a transaction
+     */
+    public void commit() {
+        try {
+            connection.commit();
+        } catch (SQLException e) {
+            throw new CouldNotCommitATransaction(e);
+        }
+    }
+
+    /**
+     * Closes the underlying connection.
+     */
+    public void close() throws Exception {
+        connection.close();
     }
 
     public class NativeQuery<QueryResultType> {

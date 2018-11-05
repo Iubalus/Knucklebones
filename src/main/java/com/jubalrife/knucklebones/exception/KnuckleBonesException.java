@@ -43,4 +43,32 @@ public class KnuckleBonesException extends RuntimeException {
             super(String.format("Could not construct instance of %s", type.getName()), cause);
         }
     }
+
+    public static class CouldNotCreateConnection extends KnuckleBonesException {
+
+        public CouldNotCreateConnection(Throwable cause) {
+            super("Unable to create connection:", cause);
+        }
+    }
+
+    public static class CouldNotCreateATransaction extends KnuckleBonesException {
+
+        public CouldNotCreateATransaction(Throwable cause) {
+            super("Unable to open a transaction:", cause);
+        }
+    }
+
+    public static class CouldNotCommitATransaction extends KnuckleBonesException {
+
+        public CouldNotCommitATransaction(Throwable cause) {
+            super("Unable to commit a transaction:", cause);
+        }
+    }
+
+    public static class CouldNotRollbackATransaction extends KnuckleBonesException {
+
+        public CouldNotRollbackATransaction(Throwable cause) {
+            super("Unable to commit a transaction:", cause);
+        }
+    }
 }

@@ -2,7 +2,7 @@ package com.jubalrife.knucklebones;
 
 import java.util.HashMap;
 
-class DAOFactory {
+public class DAOFactory {
     private static HashMap<Class<?>, DAO<?>> cache = new HashMap<>();
 
     @SuppressWarnings("unchecked")

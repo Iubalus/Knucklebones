@@ -1,4 +1,4 @@
-package com.jubalrife.knucklebones;
+package com.jubalrife.knucklebones.dialect.generic;
 
 import com.jubalrife.knucklebones.exception.KnuckleBonesException;
 
@@ -6,7 +6,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SQLWithParameters {
+class SQLWithParameters {
     private StringBuilder sql = new StringBuilder();
     private List<Object> parameters = new ArrayList<>();
 

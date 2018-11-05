@@ -21,13 +21,13 @@ public class DAOTest extends WithInMemoryDB {
 
     @Before
     public void createTestTable() throws Exception {
-        getConnection().prepareStatement("CREATE TABLE Test (A INT)").executeUpdate();
-        getConnection().prepareStatement("INSERT INTO Test (A) VALUES(1)").executeUpdate();
+        getPersistence().getConnection().prepareStatement("CREATE TABLE Test (A INT)").executeUpdate();
+        getPersistence().getConnection().prepareStatement("INSERT INTO Test (A) VALUES(1)").executeUpdate();
     }
 
     @After
     public void tearDown() throws Exception {
-        getConnection().prepareStatement("DROP TABLE Test").executeUpdate();
+        getPersistence().getConnection().prepareStatement("DROP TABLE Test").executeUpdate();
     }
 
     @Test
@@ -93,7 +93,7 @@ public class DAOTest extends WithInMemoryDB {
 
     @Test(expected = KnuckleBonesException.PropertyInaccessible.class)
     public void givenObjectWithInaccessibleProperties_expectException() throws Exception {
-        try (ResultSet results = getConnection().prepareStatement("SELECT A FROM Test").executeQuery()) {
+        try (ResultSet results = getPersistence().getConnection().prepareStatement("SELECT A FROM Test").executeQuery()) {
             List<HasInaccessibleProperties> a = new DAO<>(HasInaccessibleProperties.class).fillFromResultSet(results);
             System.out.println(a);
         }
@@ -101,7 +101,7 @@ public class DAOTest extends WithInMemoryDB {
 
     @Test
     public void givenSimpleFillablePojo_expectFilled() throws Exception {
-        try (ResultSet results = getConnection().prepareStatement("SELECT A FROM Test").executeQuery()) {
+        try (ResultSet results = getPersistence().getConnection().prepareStatement("SELECT A FROM Test").executeQuery()) {
             List<Fillable> result = new DAO<>(Fillable.class).fillFromResultSet(results);
             assertThat(result.size(), is(1));
             assertThat(result.get(0).a, is(1));

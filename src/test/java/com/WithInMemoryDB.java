@@ -1,5 +1,7 @@
 package com;
 
+import com.jubalrife.knucklebones.Persistence;
+import com.jubalrife.knucklebones.PersistenceFactory;
 import com.jubalrife.knucklebones.sql.Runner;
 import org.h2.jdbcx.JdbcConnectionPool;
 import org.junit.After;
@@ -10,14 +12,17 @@ import java.sql.Connection;
 
 public class WithInMemoryDB {
 
-    private static Connection connection;
     private static JdbcConnectionPool connectionPool;
+    private static PersistenceFactory factory;
+    private Persistence connection;
 
     @BeforeClass
     public static final void _setupConnectionPool() throws Exception {
         if (connectionPool != null) return;
 
         connectionPool = JdbcConnectionPool.create("jdbc:h2:mem:test", "sa", "sa");
+        factory = new PersistenceFactory(connectionPool);
+
         try (Connection connection = connectionPool.getConnection()) {
             new Runner().run(connection);
         }
@@ -25,8 +30,8 @@ public class WithInMemoryDB {
 
     @Before
     public final void _before() throws Exception {
-        connection = connectionPool.getConnection();
-        connection.setAutoCommit(false);
+        connection = factory.create();
+        connection.begin();
     }
 
     @After
@@ -35,7 +40,7 @@ public class WithInMemoryDB {
         connection.close();
     }
 
-    public static Connection getConnection() {
+    public Persistence getPersistence() {
         return connection;
     }
 }

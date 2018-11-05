@@ -1,5 +1,6 @@
-package com.jubalrife.knucklebones;
+package com.jubalrife.knucklebones.dialect.generic;
 
+import com.jubalrife.knucklebones.*;
 import com.jubalrife.knucklebones.exception.KnuckleBonesException;
 import com.jubalrife.knucklebones.exception.KnuckleBonesException.PropertyInaccessible;
 
@@ -57,7 +58,7 @@ public class GenericInsert {
             }
 
             if (meta.hasAdditionalGeneratedColumns()) {
-                return new GenericFindSingle().find(connection, meta.getType(), o);
+                return new GenericFindSingle().find(connection, o, DAOFactory.create(meta.getType()));
             }
 
         } catch (SQLException e) {

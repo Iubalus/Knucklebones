@@ -10,7 +10,7 @@ import java.util.LinkedList;
  * query := (Text | parameter)+
  * parameter := COLON Name
  */
-public class ParameterizedQueryParser {
+class ParameterizedQueryParser {
     private final ParameterizedQueryLexer lexer;
     private final Listener listener;
     private LinkedList<ParameterizedQueryToken> buffer = new LinkedList();

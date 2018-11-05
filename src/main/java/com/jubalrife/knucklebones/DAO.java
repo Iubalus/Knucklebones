@@ -9,7 +9,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.*;
 
-class DAO<Type> {
+public class DAO<Type> {
     private final Class<Type> type;
     private String tableName;
     private List<DAOColumnField> columns;

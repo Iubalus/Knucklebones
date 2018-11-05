@@ -1,5 +1,8 @@
-package com.jubalrife.knucklebones;
+package com.jubalrife.knucklebones.dialect.generic;
 
+import com.jubalrife.knucklebones.DAO;
+import com.jubalrife.knucklebones.DAOColumnField;
+import com.jubalrife.knucklebones.PreparedStatementExecutor;
 import com.jubalrife.knucklebones.exception.KnuckleBonesException;
 import com.jubalrife.knucklebones.exception.KnuckleBonesException.OperationRequiresIdOnAtLeastOneField;
 

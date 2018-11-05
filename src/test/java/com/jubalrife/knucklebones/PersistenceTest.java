@@ -19,7 +19,7 @@ public class PersistenceTest extends WithInMemoryDB {
 
     @Test
     public void canFillDAOWithSimpleValues() {
-        List<TableADAO> found = new Persistence(getConnection()).createNativeQuery("SELECT * FROM TableA WHERE ColumnA = 1", TableADAO.class).findResults();
+        List<TableADAO> found = getPersistence().createNativeQuery("SELECT * FROM TableA WHERE ColumnA = 1", TableADAO.class).findResults();
         assertThat(found.size(), is(1));
         assertThat(found.get(0).columnA, is(1));
         assertThat(found.get(0).columnB, is("Hello World"));
@@ -27,12 +27,12 @@ public class PersistenceTest extends WithInMemoryDB {
 
     @Test
     public void canFindWithSimpleParametersDAOWithSimpleValues() {
-        List<TableADAO> found = new Persistence(getConnection()).createNativeQuery("SELECT * FROM TableA WHERE ColumnA = :a ", TableADAO.class).setParameter("a", 1).findResults();
+        List<TableADAO> found = getPersistence().createNativeQuery("SELECT * FROM TableA WHERE ColumnA = :a ", TableADAO.class).setParameter("a", 1).findResults();
         assertThat(found.size(), is(1));
         assertThat(found.get(0).columnA, is(1));
         assertThat(found.get(0).columnB, is("Hello World"));
 
-        found = new Persistence(getConnection()).createNativeQuery("SELECT * FROM TableA WHERE ColumnB = :a ", TableADAO.class).setParameter("a", "Good Bye, Moon").findResults();
+        found = getPersistence().createNativeQuery("SELECT * FROM TableA WHERE ColumnB = :a ", TableADAO.class).setParameter("a", "Good Bye, Moon").findResults();
         assertThat(found.size(), is(1));
         assertThat(found.get(0).columnA, is(2));
         assertThat(found.get(0).columnB, is("Good Bye, Moon"));
@@ -44,7 +44,7 @@ public class PersistenceTest extends WithInMemoryDB {
         o.columnA = 3;
         o.columnB = "Text";
 
-        Persistence persistence = new Persistence(getConnection());
+        Persistence persistence = getPersistence();
         persistence.insert(o);
 
         List<TableADAO> found = persistence.createNativeQuery("SELECT * FROM TableA WHERE ColumnA = 3", TableADAO.class).findResults();
@@ -56,7 +56,7 @@ public class PersistenceTest extends WithInMemoryDB {
     @Test
     public void insertedItemHonorsGeneratedValues() {
         GeneratedColumns o = new GeneratedColumns();
-        Persistence persistence = new Persistence(getConnection());
+        Persistence persistence = getPersistence();
         o = persistence.insert(o);
 
         assertThat(o.id, is(1));
@@ -68,7 +68,7 @@ public class PersistenceTest extends WithInMemoryDB {
         TableAWithId dao = new TableAWithId();
         dao.columnA = 1;
 
-        Persistence persistence = new Persistence(getConnection());
+        Persistence persistence = getPersistence();
         dao = persistence.find(dao);
 
         assertThat(dao.columnA, is(1));
@@ -82,7 +82,7 @@ public class PersistenceTest extends WithInMemoryDB {
         term.startDate = format.parse("2018-10-01");
         term.endDate = format.parse("2018-12-15");
 
-        Persistence persistence = new Persistence(getConnection());
+        Persistence persistence = getPersistence();
         Term inserted = persistence.insert(term);
 
 
@@ -97,7 +97,7 @@ public class PersistenceTest extends WithInMemoryDB {
         TableAWithId id = new TableAWithId();
         id.columnA = 1;
 
-        Persistence persistence = new Persistence(getConnection());
+        Persistence persistence = getPersistence();
         TableAWithId toUpdate = persistence.find(id);
         toUpdate.columnB = "Updated";
 
@@ -112,7 +112,7 @@ public class PersistenceTest extends WithInMemoryDB {
         TableAWithId id = new TableAWithId();
         id.columnA = 1;
 
-        Persistence persistence = new Persistence(getConnection());
+        Persistence persistence = getPersistence();
         int deleted = persistence.delete(id);
 
         assertThat(deleted, is(1));
@@ -125,7 +125,7 @@ public class PersistenceTest extends WithInMemoryDB {
         id.columnA = 1;
         id.columnB = "Updated";
 
-        new Persistence(getConnection()).update(id);
+        getPersistence().update(id);
     }
 
     @Test(expected = KnuckleBonesException.OperationRequiresIdOnAtLeastOneField.class)
@@ -133,7 +133,7 @@ public class PersistenceTest extends WithInMemoryDB {
         TableADAO id = new TableADAO();
         id.columnA = 1;
 
-        new Persistence(getConnection()).find(id);
+        getPersistence().find(id);
     }
 
     @Test(expected = KnuckleBonesException.OperationRequiresIdOnAtLeastOneField.class)
@@ -141,7 +141,7 @@ public class PersistenceTest extends WithInMemoryDB {
         TableADAO id = new TableADAO();
         id.columnA = 1;
 
-        new Persistence(getConnection()).delete(id);
+        getPersistence().delete(id);
     }
 
     @Table(name = "TableA")
@@ -157,7 +157,7 @@ public class PersistenceTest extends WithInMemoryDB {
         public String columnB;
     }
 
-    static class GeneratedColumns {
+    public static class GeneratedColumns {
         @Id
         @GeneratedValue
         public Integer id;
@@ -165,7 +165,7 @@ public class PersistenceTest extends WithInMemoryDB {
         public Integer defaultValue;
     }
 
-    static class Term {
+    public static class Term {
         @Id
         @GeneratedValue
         public Integer termId;

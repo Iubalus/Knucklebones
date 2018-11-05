@@ -1,5 +1,6 @@
-package com.jubalrife.knucklebones;
+package com.jubalrife.knucklebones.dialect.generic;
 
+import com.jubalrife.knucklebones.*;
 import com.jubalrife.knucklebones.exception.KnuckleBonesException.CouldNotFetchData;
 import com.jubalrife.knucklebones.exception.KnuckleBonesException.OperationRequiresIdOnAtLeastOneField;
 
@@ -10,8 +11,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 public class GenericFindSingle {
-    public <DAOType> DAOType find(Connection c, Class<DAOType> type, Object o) {
-        DAO<DAOType> daoMeta = DAOFactory.create(type);
+    public <DAOType> DAOType find(Connection c, Object o, DAO<DAOType> daoMeta) {
         if (daoMeta.getNumberOfIdColumns() == 0) throw new OperationRequiresIdOnAtLeastOneField(daoMeta.getType());
 
         SQLWithParameters sql = new SQLWithParameters();
@@ -20,7 +20,7 @@ public class GenericFindSingle {
         sql.append(" WHERE ");
         String sep = "";
 
-        for (DAOColumnField DAOColumnField : daoMeta.getColumns()) {
+        for ( DAOColumnField DAOColumnField : daoMeta.getColumns()) {
             if (!DAOColumnField.isId()) continue;
             sql.append(sep);
             sql.append(DAOColumnField.getName());

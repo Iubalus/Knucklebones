@@ -1,11 +1,10 @@
 package com.jubalrife.knucklebones;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class ParameterizedQuery {
+class ParameterizedQuery {
     private final String raw;
     private final String query;
     private final List<String> parameterNames;
@@ -17,10 +16,10 @@ public class ParameterizedQuery {
         this.parameterNames = parameterNames;
     }
 
-    public List<Object> getParameters() throws SQLException {
+    public List<Object> getParameters() {
         List<Object> params = new ArrayList<>();
         for (int i = 0; i < parameterNames.size(); i++) {
-            params.add( parameters.get(parameterNames.get(i)));
+            params.add(parameters.get(parameterNames.get(i)));
         }
         return params;
     }

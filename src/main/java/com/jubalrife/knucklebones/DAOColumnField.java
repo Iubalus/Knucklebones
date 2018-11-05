@@ -6,7 +6,7 @@ import com.jubalrife.knucklebones.annotation.Id;
 
 import java.lang.reflect.Field;
 
-class DAOColumnField {
+public class DAOColumnField {
     private final String name;
     private final Field field;
     private final boolean isId;

@@ -11,7 +11,7 @@ import javax.annotation.processing.SupportedSourceVersion;
  * <li>EOF: EOF</li>
  * </ul>
  */
-public class ParameterizedQueryLexer {
+class ParameterizedQueryLexer {
     private final String text;
     private int index;
     private int line;
