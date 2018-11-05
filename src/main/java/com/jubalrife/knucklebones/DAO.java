@@ -15,6 +15,7 @@ class DAO<Type> {
     private List<DAOColumnField> columns;
     private DAOColumnField generatedId;
     private int numberOfGeneratedColumns = 0;
+    private int numberOfIdColumns = 0;
 
     DAO(Class<Type> type) {
         this.type = type;
@@ -35,6 +36,7 @@ class DAO<Type> {
         for (Field field : type.getDeclaredFields()) {
             DAOColumnField e = new DAOColumnField(field);
             if (e.isGenerated()) numberOfGeneratedColumns++;
+            if (e.isId()) numberOfIdColumns++;
             if (e.isId() && e.isGenerated() && generatedId == null) {
                 generatedId = e;
             }
@@ -61,6 +63,10 @@ class DAO<Type> {
 
     public boolean hasAdditionalGeneratedColumns() {
         return numberOfGeneratedColumns > 1;
+    }
+
+    public int getNumberOfIdColumns() {
+        return numberOfIdColumns;
     }
 
     public List<Type> fillFromResultSet(ResultSet resultSet) {

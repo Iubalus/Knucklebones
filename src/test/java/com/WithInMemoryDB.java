@@ -26,10 +26,12 @@ public class WithInMemoryDB {
     @Before
     public final void _before() throws Exception {
         connection = connectionPool.getConnection();
+        connection.setAutoCommit(false);
     }
 
     @After
     public final void _after() throws Exception {
+        connection.rollback();
         connection.close();
     }
 

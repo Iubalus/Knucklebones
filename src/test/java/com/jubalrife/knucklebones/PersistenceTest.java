@@ -4,10 +4,9 @@ import com.WithInMemoryDB;
 import com.jubalrife.knucklebones.annotation.GeneratedValue;
 import com.jubalrife.knucklebones.annotation.Id;
 import com.jubalrife.knucklebones.annotation.Table;
-import jdk.nashorn.internal.parser.DateParser;
+import com.jubalrife.knucklebones.exception.KnuckleBonesException;
 import org.junit.Test;
 
-import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -77,7 +76,7 @@ public class PersistenceTest extends WithInMemoryDB {
     }
 
     @Test
-    public void testDateInsertAndRetieval() throws ParseException {
+    public void testDateInsertAndRetrieval() throws ParseException {
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
         Term term = new Term();
         term.startDate = format.parse("2018-10-01");
@@ -93,20 +92,72 @@ public class PersistenceTest extends WithInMemoryDB {
         assertThat(term.endDate, is(found.endDate));
     }
 
+    @Test
+    public void updateSucceedsWhenIdIsPresent() {
+        TableAWithId id = new TableAWithId();
+        id.columnA = 1;
+
+        Persistence persistence = new Persistence(getConnection());
+        TableAWithId toUpdate = persistence.find(id);
+        toUpdate.columnB = "Updated";
+
+        persistence.update(toUpdate);
+
+        TableAWithId updated = persistence.find(toUpdate);
+        assertThat(updated.columnB, is("Updated"));
+    }
+
+    @Test
+    public void deleteSucceedsWhenIdIsPresent() {
+        TableAWithId id = new TableAWithId();
+        id.columnA = 1;
+
+        Persistence persistence = new Persistence(getConnection());
+        int deleted = persistence.delete(id);
+
+        assertThat(deleted, is(1));
+        assertNull(persistence.find(id));
+    }
+
+    @Test(expected = KnuckleBonesException.OperationRequiresIdOnAtLeastOneField.class)
+    public void updateFailsWhenIdIsNotPresent() {
+        TableADAO id = new TableADAO();
+        id.columnA = 1;
+        id.columnB = "Updated";
+
+        new Persistence(getConnection()).update(id);
+    }
+
+    @Test(expected = KnuckleBonesException.OperationRequiresIdOnAtLeastOneField.class)
+    public void findFailsWhenIdIsNotPresent() {
+        TableADAO id = new TableADAO();
+        id.columnA = 1;
+
+        new Persistence(getConnection()).find(id);
+    }
+
+    @Test(expected = KnuckleBonesException.OperationRequiresIdOnAtLeastOneField.class)
+    public void deleteFailsWhenIdIsNotPresent() {
+        TableADAO id = new TableADAO();
+        id.columnA = 1;
+
+        new Persistence(getConnection()).delete(id);
+    }
+
     @Table(name = "TableA")
-    public static class TableADAO {
+    static class TableADAO {
         public Integer columnA;
         public String columnB;
     }
 
     @Table(name = "TableA")
-    public static class TableAWithId {
+    static class TableAWithId {
         @Id
         public Integer columnA;
         public String columnB;
     }
 
-    public static class GeneratedColumns {
+    static class GeneratedColumns {
         @Id
         @GeneratedValue
         public Integer id;
@@ -114,7 +165,7 @@ public class PersistenceTest extends WithInMemoryDB {
         public Integer defaultValue;
     }
 
-    public static class Term {
+    static class Term {
         @Id
         @GeneratedValue
         public Integer termId;

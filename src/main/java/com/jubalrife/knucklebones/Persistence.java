@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.List;
 
 public class Persistence {
-
     private Connection connection;
 
     public Persistence(Connection connection) {
@@ -22,13 +21,21 @@ public class Persistence {
         return new GenericFindSingle().<ResultType>find(connection, (Class<ResultType>) item.getClass(), item);
     }
 
-    public <ResultType> NativeQuery<ResultType> createNativeQuery(String query, Class<ResultType> type) {
-        return new NativeQuery<>(type, query);
-    }
-
     @SuppressWarnings("unchecked")
     public <ResultType> ResultType insert(ResultType o) {
         return new GenericInsert().insert(DAOFactory.create((Class<ResultType>) o.getClass()), o, connection);
+    }
+
+    public int update(Object o) {
+        return new GenericUpdate().update(DAOFactory.create(o.getClass()), o, connection);
+    }
+
+    public int delete(Object o) {
+        return new GenericDelete().delete(connection, DAOFactory.create(o.getClass()), o);
+    }
+
+    public <ResultType> NativeQuery<ResultType> createNativeQuery(String query, Class<ResultType> type) {
+        return new NativeQuery<>(type, query);
     }
 
     public class NativeQuery<QueryResultType> {
