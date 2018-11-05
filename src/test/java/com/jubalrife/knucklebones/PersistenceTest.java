@@ -145,13 +145,13 @@ public class PersistenceTest extends WithInMemoryDB {
     }
 
     @Table(name = "TableA")
-    static class TableADAO {
+    public static class TableADAO {
         public Integer columnA;
         public String columnB;
     }
 
     @Table(name = "TableA")
-    static class TableAWithId {
+    public static class TableAWithId {
         @Id
         public Integer columnA;
         public String columnB;
