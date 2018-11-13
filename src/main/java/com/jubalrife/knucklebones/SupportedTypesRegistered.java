@@ -1,6 +1,7 @@
 package com.jubalrife.knucklebones;
 
 import com.jubalrife.knucklebones.exception.KnuckleBonesException;
+import com.jubalrife.knucklebones.type.*;
 
 import java.sql.*;
 import java.util.Date;
@@ -15,14 +16,37 @@ public class SupportedTypesRegistered implements SupportedTypes {
     private Map<Class<?>, Refiner> supportedRefiners = new HashMap<>();
 
     SupportedTypesRegistered() {
-        registerType(Types.BIGINT, Long.class, (columnIndex, results) -> results.getLong(columnIndex));
-        registerType(Types.BIGINT, Long.TYPE, (columnIndex, results) -> results.getLong(columnIndex));
+        registerType(Types.BIGINT, Boolean.class, new NumericToBoolean());
+        registerType(Types.INTEGER, Boolean.class, new NumericToBoolean());
+        registerType(Types.SMALLINT, Boolean.class, new NumericToBoolean());
+        registerType(Types.TINYINT, Boolean.class, new NumericToBoolean());
+        registerType(Types.BIT, Boolean.class, new NumericToBoolean());
+        registerType(Types.BOOLEAN, Boolean.class, new NumericToBoolean());
+        registerType(Types.BIGINT, Boolean.TYPE, new NumericToBool());
+        registerType(Types.INTEGER, Boolean.TYPE, new NumericToBool());
+        registerType(Types.SMALLINT, Boolean.TYPE, new NumericToBool());
+        registerType(Types.TINYINT, Boolean.TYPE, new NumericToBool());
+        registerType(Types.BIT, Boolean.TYPE, new NumericToBool());
+        registerType(Types.BOOLEAN, Boolean.TYPE, new NumericToBool());
 
-        registerType(Types.BIGINT, Integer.TYPE, (columnIndex, results) -> results.getInt(columnIndex));
-        registerType(Types.BIGINT, Integer.class, (columnIndex, results) -> results.getInt(columnIndex));
+        registerType(Types.BIGINT, Long.class, new LongExtractor());
+        registerType(Types.BIGINT, Long.TYPE, new LongPrimitiveExtractor());
+        registerType(Types.BIGINT, Integer.class, new IntegerExtractor());
+        registerType(Types.BIGINT, Integer.TYPE, new IntExtractor());
+        registerType(Types.BIGINT, Short.class, new ShortExtractor());
+        registerType(Types.BIGINT, Short.TYPE, new ShortPrimitiveExtractor());
+        registerType(Types.BIGINT, Byte.class, new ByteExtractor());
+        registerType(Types.BIGINT, Byte.TYPE, new BytePrimitiveExtractor());
 
-        registerType(Types.INTEGER, Integer.TYPE, (columnIndex, results) -> results.getInt(columnIndex));
-        registerType(Types.INTEGER, Integer.class, (columnIndex, results) -> results.getInt(columnIndex));
+        registerType(Types.INTEGER, Long.class, new LongExtractor());
+        registerType(Types.INTEGER, Long.TYPE, new LongPrimitiveExtractor());
+        registerType(Types.INTEGER, Integer.class, new IntegerExtractor());
+        registerType(Types.INTEGER, Integer.TYPE, new IntExtractor());
+        registerType(Types.INTEGER, Short.class, new ShortExtractor());
+        registerType(Types.INTEGER, Short.TYPE, new ShortPrimitiveExtractor());
+        registerType(Types.INTEGER, Byte.class, new ByteExtractor());
+        registerType(Types.INTEGER, Byte.TYPE, new BytePrimitiveExtractor());
+
 
         registerType(Types.VARCHAR, String.class, ((columnIndex, results) -> results.getString(columnIndex)));
 

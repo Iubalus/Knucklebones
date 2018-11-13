@@ -71,4 +71,10 @@ public class KnuckleBonesException extends RuntimeException {
             super("Unable to commit a transaction:", cause);
         }
     }
+
+    public static class UnableToMapNullIntoAPrimitiveValue extends KnuckleBonesException{
+        public UnableToMapNullIntoAPrimitiveValue(int columnIndex){
+            super("Unable to map a null value into a primitive type. Null value was retrieved from column " + columnIndex);
+        }
+    }
 }

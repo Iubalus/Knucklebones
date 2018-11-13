@@ -140,7 +140,6 @@ public class DAOTest extends WithInMemoryDB {
     static class C {
         public String a;
     }
-
     static class D {
         @Column(name = "B")
         public String a;
