@@ -11,7 +11,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 public class GenericFindSingle {
-    public <DAOType> DAOType find(Connection c, Object o, DAO<DAOType> daoMeta) {
+    public <DAOType> DAOType find(Connection c, Object o, DAO<DAOType> daoMeta, SupportedTypesRegistered supportedTypes) {
         if (daoMeta.getNumberOfIdColumns() == 0) throw new OperationRequiresIdOnAtLeastOneField(daoMeta.getType());
 
         SQLWithParameters sql = new SQLWithParameters();
@@ -31,9 +31,9 @@ public class GenericFindSingle {
 
         List<DAOType> resultList;
         PreparedStatementExecutor executor = new PreparedStatementExecutor();
-        try (PreparedStatement find = executor.execute(c, sql.getSql(), sql.getParameters())) {
+        try (PreparedStatement find = executor.execute(c, sql.getSql(), sql.getParameters(), supportedTypes)) {
             try (ResultSet s = find.executeQuery()) {
-                resultList = daoMeta.fillFromResultSet(s);
+                resultList = daoMeta.fillFromResultSet(s, supportedTypes);
             }
         } catch (SQLException e) {
             throw new CouldNotFetchData(e);

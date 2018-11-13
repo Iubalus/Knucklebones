@@ -16,32 +16,45 @@ import java.util.List;
 public class Persistence implements AutoCloseable {
     private Connection connection;
     private Dialect dialect;
+    private SupportedTypesRegistered supportedTypes;
 
     Persistence(Connection connection, Dialect dialect) {
         this.connection = connection;
         this.dialect = dialect;
+        supportedTypes = new SupportedTypesRegistered();
     }
 
     @SuppressWarnings("unchecked")
     public <ResultType> ResultType find(ResultType item) {
-        return dialect.find(connection, DAOFactory.create((Class<ResultType>) item.getClass()), item);
+        return dialect.find(connection, DAOFactory.create((Class<ResultType>) item.getClass()), item, supportedTypes);
     }
 
     @SuppressWarnings("unchecked")
     public <ResultType> ResultType insert(ResultType o) {
-        return dialect.insert(connection, DAOFactory.create((Class<ResultType>) o.getClass()), o);
+        return dialect.insert(connection, DAOFactory.create((Class<ResultType>) o.getClass()), o, supportedTypes);
     }
 
     public int update(Object o) {
-        return dialect.update(connection, DAOFactory.create(o.getClass()), o);
+        return dialect.update(connection, DAOFactory.create(o.getClass()), o, supportedTypes);
     }
 
     public int delete(Object o) {
-        return dialect.delete(connection, DAOFactory.create(o.getClass()), o);
+        return dialect.delete(connection, DAOFactory.create(o.getClass()), o, supportedTypes);
     }
 
     public <ResultType> NativeQuery<ResultType> createNativeQuery(String query, Class<ResultType> type) {
         return new NativeQuery<>(type, query);
+    }
+
+    /**
+     * @return the {@link SupportedTypes} for this persistence.
+     */
+    public SupportedTypes getSupportedTypes() {
+        return supportedTypes;
+    }
+
+    SupportedTypesRegistered getSupportedTypesRegistered(){
+        return supportedTypes;
     }
 
     /**
@@ -118,9 +131,14 @@ public class Persistence implements AutoCloseable {
             DAO<QueryResultType> dao = DAOFactory.create(type);
 
             PreparedStatementExecutor executor = new PreparedStatementExecutor();
-            try (PreparedStatement statement = executor.execute(connection, parameterizedQuery.getQuery(), parameterizedQuery.getParameters())) {
+            try (PreparedStatement statement = executor.execute(
+                    connection,
+                    parameterizedQuery.getQuery(),
+                    parameterizedQuery.getParameters(),
+                    supportedTypes
+            )) {
                 try (ResultSet result = statement.executeQuery()) {
-                    return dao.fillFromResultSet(result);
+                    return dao.fillFromResultSet(result, supportedTypes);
                 }
             } catch (SQLException e) {
                 throw new CouldNotFetchData(e);

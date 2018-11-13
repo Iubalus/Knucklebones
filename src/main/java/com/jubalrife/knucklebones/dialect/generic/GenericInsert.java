@@ -11,7 +11,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 public class GenericInsert {
-    public <Type> Type insert(DAO<Type> meta, Type o, Connection connection) {
+    public <Type> Type insert(DAO<Type> meta, Type o, Connection connection, SupportedTypesRegistered supportedTypes) {
         List<DAOColumnField> columns1 = meta.getColumns();
         SQLWithParameters sql = new SQLWithParameters();
         sql.append("INSERT INTO ");
@@ -39,7 +39,12 @@ public class GenericInsert {
         sql.append(")");
 
         PreparedStatementExecutor executor = new PreparedStatementExecutor();
-        try (PreparedStatement statement = executor.execute(connection, sql.getSql(), sql.getParameters())) {
+        try (PreparedStatement statement = executor.execute(
+                connection,
+                sql.getSql(),
+                sql.getParameters(),
+                supportedTypes
+        )) {
             statement.executeUpdate();
 
             DAOColumnField generatedKey = meta.getGeneratedId();
@@ -49,7 +54,8 @@ public class GenericInsert {
 
             ResultSet keys = statement.getGeneratedKeys();
             if (keys.next()) {
-                Object o1 = SupportedTypes.getExtractor(keys.getMetaData().getColumnType(1), generatedKey.getField().getType()).extract(1, keys);
+                Object o1 = supportedTypes
+                        .getExtractor(keys.getMetaData().getColumnType(1), generatedKey.getField().getType()).extract(1, keys);
                 try {
                     generatedKey.getField().set(o, o1);
                 } catch (IllegalAccessException e) {
@@ -58,7 +64,9 @@ public class GenericInsert {
             }
 
             if (meta.hasAdditionalGeneratedColumns()) {
-                return new GenericFindSingle().find(connection, o, DAOFactory.create(meta.getType()));
+                return new GenericFindSingle().find(connection, o, DAOFactory.create(meta.getType()),
+                        supportedTypes
+                );
             }
 
         } catch (SQLException e) {

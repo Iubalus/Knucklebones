@@ -3,6 +3,7 @@ package com.jubalrife.knucklebones.dialect.generic;
 import com.jubalrife.knucklebones.DAO;
 import com.jubalrife.knucklebones.DAOColumnField;
 import com.jubalrife.knucklebones.PreparedStatementExecutor;
+import com.jubalrife.knucklebones.SupportedTypesRegistered;
 import com.jubalrife.knucklebones.exception.KnuckleBonesException;
 import com.jubalrife.knucklebones.exception.KnuckleBonesException.OperationRequiresIdOnAtLeastOneField;
 
@@ -11,7 +12,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 public class GenericUpdate {
-    public <Type> int update(DAO<Type> daoMeta, Object dao, Connection connection) {
+    public <Type> int update(DAO<Type> daoMeta, Object dao, Connection connection, SupportedTypesRegistered supportedTypes) {
         if (daoMeta.getNumberOfIdColumns() == 0) throw new OperationRequiresIdOnAtLeastOneField(daoMeta.getType());
 
         SQLWithParameters sql = new SQLWithParameters();
@@ -42,7 +43,12 @@ public class GenericUpdate {
             sep = " AND ";
         }
 
-        try (PreparedStatement statement = new PreparedStatementExecutor().execute(connection, sql.getSql(), sql.getParameters())) {
+        try (PreparedStatement statement = new PreparedStatementExecutor().execute(
+                connection,
+                sql.getSql(),
+                sql.getParameters(),
+                supportedTypes
+        )) {
             return statement.executeUpdate();
         } catch (SQLException e) {
             throw new KnuckleBonesException.CouldNotUpdateData(e);

@@ -69,7 +69,7 @@ public class DAO<Type> {
         return numberOfIdColumns;
     }
 
-    public List<Type> fillFromResultSet(ResultSet resultSet) {
+    public List<Type> fillFromResultSet(ResultSet resultSet, SupportedTypesRegistered supportedTypes) {
         Map<DAOColumnField, Integer> fieldToColumn = createFieldToColumnMapping(resultSet);
 
         ArrayList<Type> results = new ArrayList<>();
@@ -79,7 +79,7 @@ public class DAO<Type> {
                 for (Map.Entry<DAOColumnField, Integer> toMap : fieldToColumn.entrySet()) {
                     DAOColumnField key = toMap.getKey();
                     try {
-                        key.getField().set(type, extractValue(resultSet, toMap, key));
+                        key.getField().set(type, extractValue(resultSet, toMap, key, supportedTypes));
                     } catch (IllegalAccessException e) {
                         throw new KnuckleBonesException.PropertyInaccessible(key.getField(), getType(), e);
                     }
@@ -112,8 +112,15 @@ public class DAO<Type> {
         return fieldToColumn;
     }
 
-    private Object extractValue(ResultSet resultSet, Map.Entry<DAOColumnField, Integer> toMap, DAOColumnField key) throws SQLException {
-        return SupportedTypes.getExtractor(toMap.getValue(), key.getField().getType()).extract(resultSet.findColumn(key.getName()), resultSet);
+    private Object extractValue(
+            ResultSet resultSet,
+            Map.Entry<DAOColumnField, Integer> toMap,
+            DAOColumnField key,
+            SupportedTypesRegistered supportedTypes
+    ) throws SQLException {
+        return supportedTypes
+                .getExtractor(toMap.getValue(), key.getField().getType())
+                .extract(resultSet.findColumn(key.getName()), resultSet);
     }
 
     public Type newInstance() {

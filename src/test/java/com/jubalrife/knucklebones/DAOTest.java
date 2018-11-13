@@ -93,16 +93,28 @@ public class DAOTest extends WithInMemoryDB {
 
     @Test(expected = KnuckleBonesException.PropertyInaccessible.class)
     public void givenObjectWithInaccessibleProperties_expectException() throws Exception {
-        try (ResultSet results = getPersistence().getConnection().prepareStatement("SELECT A FROM Test").executeQuery()) {
-            List<HasInaccessibleProperties> a = new DAO<>(HasInaccessibleProperties.class).fillFromResultSet(results);
+        try (ResultSet results = getPersistence()
+                .getConnection()
+                .prepareStatement("SELECT A FROM Test")
+                .executeQuery()) {
+            List<HasInaccessibleProperties> a = new DAO<>(HasInaccessibleProperties.class).fillFromResultSet(
+                    results,
+                    getPersistence().getSupportedTypesRegistered()
+            );
             System.out.println(a);
         }
     }
 
     @Test
     public void givenSimpleFillablePojo_expectFilled() throws Exception {
-        try (ResultSet results = getPersistence().getConnection().prepareStatement("SELECT A FROM Test").executeQuery()) {
-            List<Fillable> result = new DAO<>(Fillable.class).fillFromResultSet(results);
+        try (ResultSet results = getPersistence()
+                .getConnection()
+                .prepareStatement("SELECT A FROM Test")
+                .executeQuery()) {
+            List<Fillable> result = new DAO<>(Fillable.class).fillFromResultSet(
+                    results,
+                    getPersistence().getSupportedTypesRegistered()
+            );
             assertThat(result.size(), is(1));
             assertThat(result.get(0).a, is(1));
         }
@@ -128,6 +140,7 @@ public class DAOTest extends WithInMemoryDB {
     static class C {
         public String a;
     }
+
     static class D {
         @Column(name = "B")
         public String a;

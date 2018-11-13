@@ -25,3 +25,4 @@ hs_err_pid*
 build/*
 gradle/wrapper/gradle-wrapper.properties
 .idea/*
+out/test/*
