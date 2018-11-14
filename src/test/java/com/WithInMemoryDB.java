@@ -1,8 +1,8 @@
 package com;
 
-import com.jubalrife.knucklebones.Persistence;
-import com.jubalrife.knucklebones.PersistenceFactory;
-import com.jubalrife.knucklebones.sql.Runner;
+import com.jubalrife.knucklebones.v1.Persistence;
+import com.jubalrife.knucklebones.v1.PersistenceFactory;
+import com.jubalrife.knucklebones.v1.sql.Runner;
 import org.h2.jdbcx.JdbcConnectionPool;
 import org.junit.After;
 import org.junit.Before;
