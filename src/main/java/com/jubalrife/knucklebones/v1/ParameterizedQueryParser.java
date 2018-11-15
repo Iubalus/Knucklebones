@@ -13,7 +13,7 @@ import java.util.LinkedList;
 class ParameterizedQueryParser {
     private final ParameterizedQueryLexer lexer;
     private final Listener listener;
-    private LinkedList<ParameterizedQueryToken> buffer = new LinkedList();
+    private LinkedList<ParameterizedQueryToken> buffer = new LinkedList<>();
 
     public ParameterizedQueryParser(ParameterizedQueryLexer lexer, Listener listener) {
         this.lexer = lexer;

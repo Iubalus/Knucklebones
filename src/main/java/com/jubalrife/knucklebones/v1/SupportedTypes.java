@@ -38,7 +38,7 @@ public interface SupportedTypes {
     /**
      * An {@link Extractor} describes how to extractor describes how to extract a value from a {@link ResultSet} of a given type.
      */
-    public interface Extractor {
+    interface Extractor {
         /**
          * @param columnIndex should be assumed as whatever column the desired value will be extracted from. This should for the most part be delegated to the provided {@link ResultSet} in some way
          * @param results     is the {@link ResultSet} from which the data should be extracted
@@ -48,7 +48,7 @@ public interface SupportedTypes {
         Object extract(Integer columnIndex, ResultSet results) throws SQLException;
     }
 
-    public interface Refiner {
+    interface Refiner {
         void refine(Integer parameterNumber, Object value, PreparedStatement statement) throws SQLException;
     }
 }

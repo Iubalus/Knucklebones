@@ -47,20 +47,55 @@ public class SupportedTypesRegistered implements SupportedTypes {
         registerType(Types.INTEGER, Byte.class, new ByteExtractor());
         registerType(Types.INTEGER, Byte.TYPE, new BytePrimitiveExtractor());
 
+        registerType(Types.SMALLINT, Long.class, new LongExtractor());
+        registerType(Types.SMALLINT, Long.TYPE, new LongPrimitiveExtractor());
+        registerType(Types.SMALLINT, Integer.class, new IntegerExtractor());
+        registerType(Types.SMALLINT, Integer.TYPE, new IntExtractor());
+        registerType(Types.SMALLINT, Short.class, new ShortExtractor());
+        registerType(Types.SMALLINT, Short.TYPE, new ShortPrimitiveExtractor());
+        registerType(Types.SMALLINT, Byte.class, new ByteExtractor());
+        registerType(Types.SMALLINT, Byte.TYPE, new BytePrimitiveExtractor());
+
+        registerType(Types.TINYINT, Long.class, new LongExtractor());
+        registerType(Types.TINYINT, Long.TYPE, new LongPrimitiveExtractor());
+        registerType(Types.TINYINT, Integer.class, new IntegerExtractor());
+        registerType(Types.TINYINT, Integer.TYPE, new IntExtractor());
+        registerType(Types.TINYINT, Short.class, new ShortExtractor());
+        registerType(Types.TINYINT, Short.TYPE, new ShortPrimitiveExtractor());
+        registerType(Types.TINYINT, Byte.class, new ByteExtractor());
+        registerType(Types.TINYINT, Byte.TYPE, new BytePrimitiveExtractor());
 
         registerType(Types.VARCHAR, String.class, ((columnIndex, results) -> results.getString(columnIndex)));
 
-        registerType(Types.DATE, Date.class, ((columnIndex, results) -> results.getDate(columnIndex)));
-        registerType(Types.TIMESTAMP, Date.class, ((columnIndex, results) -> results.getTimestamp(columnIndex)));
+        registerType(Types.DATE, java.util.Date.class, new JavaUtilDateExtractor());
+        registerType(Types.DATE, java.sql.Date.class, new JavaSqlDateExtractor());
+        registerType(Types.DATE, java.sql.Timestamp.class, new TimestampExtractor());
+        registerType(Types.TIMESTAMP, java.util.Date.class, new JavaUtilDateExtractor());
+        registerType(Types.TIMESTAMP, java.sql.Date.class, new JavaSqlDateExtractor());
+        registerType(Types.TIMESTAMP, java.sql.Timestamp.class, new TimestampExtractor());
 
-        registerType(
-                Date.class,
-                (index, value, statement) -> statement.setTimestamp(index, new Timestamp(((Date) value).getTime()))
-        );
-
-        registerType(Integer.TYPE, (index, value, statement) -> statement.setInt(index, (int) value));
-        registerType(Integer.class, (index, value, statement) -> statement.setObject(index, (Integer) value));
         registerType(String.class, (index, value, statement) -> statement.setString(index, (String) value));
+
+        registerType(Boolean.TYPE, (index, value, statement) -> statement.setBoolean(index, (boolean) value));
+        registerType(Boolean.class, (index, value, statement) -> {
+            if (value == null) {
+                statement.setObject(index, null);
+            } else {
+                statement.setBoolean(index, (boolean) value);
+            }
+        });
+
+        registerType(Byte.TYPE, (index, value, statement) -> statement.setInt(index, (byte) value));
+        registerType(Byte.class, (index, value, statement) -> statement.setObject(index, value));
+        registerType(Short.TYPE, (index, value, statement) -> statement.setInt(index, (short) value));
+        registerType(Short.class, (index, value, statement) -> statement.setObject(index, value));
+        registerType(Integer.TYPE, (index, value, statement) -> statement.setInt(index, (int) value));
+        registerType(Integer.class, (index, value, statement) -> statement.setObject(index, value));
+        registerType(Long.TYPE, (index, value, statement) -> statement.setLong(index, (long) value));
+        registerType(Long.class, (index, value, statement) -> statement.setObject(index, value));
+        registerType(java.util.Date.class, (index, value, statement) -> statement.setTimestamp(index, new Timestamp(((java.util.Date) value).getTime())));
+        registerType(java.sql.Date.class, (index, value, statement) -> statement.setDate(index, (java.sql.Date) value));
+        registerType(java.sql.Timestamp.class, (index, value, statement) -> statement.setTimestamp(index, (java.sql.Timestamp) value));
         registerType(null, (index, value, statement) -> statement.setObject(index, null));
     }
 

@@ -11,16 +11,34 @@ public class PersistenceFactory {
     private final DataSource dataSource;
     private final Dialect dialect;
 
+    /**
+     * Creates a Persistence Factory backed by the provided datasource. A {@link GenericDialect} is used by default.
+     *
+     * @param dataSource Backing datasource this will be used to create {@link java.sql.Connection}
+     *                   to back new {@link Persistence} when {@link PersistenceFactory#create()} is called
+     */
     public PersistenceFactory(DataSource dataSource) {
-        this.dataSource = dataSource;
-        this.dialect = new GenericDialect();
+        this(dataSource, new GenericDialect());
     }
 
+    /**
+     * Creates a Persistence Factory backed by the provided datasource and {@link Dialect}.
+     *
+     * @param dataSource Backing datasource this will be used to create {@link java.sql.Connection}
+     *                   to back new {@link Persistence} when {@link PersistenceFactory#create()} is called
+     * @param dialect    used when generating sql
+     */
     public PersistenceFactory(DataSource dataSource, Dialect dialect) {
         this.dataSource = dataSource;
         this.dialect = dialect;
     }
 
+    /**
+     * Creates a {@link Persistence} from the underlying {@link DataSource}.
+     * Calling this method will create a active connection from the data source.
+     *
+     * @return a new {@link Persistence}
+     */
     public Persistence create() {
         try {
             return new Persistence(dataSource.getConnection(), dialect);

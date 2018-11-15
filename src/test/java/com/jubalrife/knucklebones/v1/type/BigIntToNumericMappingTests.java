@@ -63,6 +63,34 @@ public class BigIntToNumericMappingTests extends WithInMemoryDB {
         assertThat(record.nullableBigIntLong, is((Long) null));
     }
 
+    @Test
+    public void givenInsertedRecordExpectedResultsSameAsOriginalValues() {
+        BigIntToNumeric id = new BigIntToNumeric();
+        id.TestCaseName = "Inserted";
+        id.nonNullableBigIntByte = 1;
+        id.nonNullableBigIntInt = 2;
+        id.nonNullableBigIntLong = 3;
+        id.nonNullableBigIntShort = 4;
+        id.nullableBigIntByte = 5;
+        id.nullableBigIntInt = 6;
+        id.nullableBigIntShort = 7;
+        id.nullableBigIntLong = 8L;
+
+
+        getPersistence().insert(id);
+        BigIntToNumeric record = getPersistence().find(id);
+
+        assertThat(record.nonNullableBigIntByte, is(id.nonNullableBigIntByte));
+        assertThat(record.nonNullableBigIntShort, is(id.nonNullableBigIntShort));
+        assertThat(record.nonNullableBigIntInt, is(id.nonNullableBigIntInt));
+        assertThat(record.nonNullableBigIntLong, is(id.nonNullableBigIntLong));
+
+        assertThat(record.nullableBigIntByte, is(id.nullableBigIntByte));
+        assertThat(record.nullableBigIntShort, is(id.nullableBigIntShort));
+        assertThat(record.nullableBigIntInt, is(id.nullableBigIntInt));
+        assertThat(record.nullableBigIntLong, is(id.nullableBigIntLong));
+    }
+
     @Table(name = "BigIntToNumeric")
     public static class BigIntToNumeric {
         @Id
