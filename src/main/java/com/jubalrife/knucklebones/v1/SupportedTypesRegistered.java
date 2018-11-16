@@ -3,6 +3,7 @@ package com.jubalrife.knucklebones.v1;
 import com.jubalrife.knucklebones.v1.exception.KnuckleBonesException;
 import com.jubalrife.knucklebones.v1.type.*;
 
+import java.math.BigDecimal;
 import java.sql.*;
 import java.util.Date;
 import java.util.HashMap;
@@ -65,11 +66,42 @@ public class SupportedTypesRegistered implements SupportedTypes {
         registerType(Types.TINYINT, Byte.class, new ByteExtractor());
         registerType(Types.TINYINT, Byte.TYPE, new BytePrimitiveExtractor());
 
+        registerType(Types.REAL, Float.TYPE, new FloatPrimitiveExtractor());
+        registerType(Types.REAL, Float.class, new FloatExtractor());
+        registerType(Types.REAL, Double.TYPE, new DoublePrimitiveExtractor());
+        registerType(Types.REAL, Double.class, new DoubleExtractor());
+        registerType(Types.REAL, BigDecimal.class, new BigDecimalExtractor());
+
+        registerType(Types.FLOAT, Float.TYPE, new FloatPrimitiveExtractor());
+        registerType(Types.FLOAT, Float.class, new FloatExtractor());
+        registerType(Types.FLOAT, Double.TYPE, new DoublePrimitiveExtractor());
+        registerType(Types.FLOAT, Double.class, new DoubleExtractor());
+        registerType(Types.FLOAT, BigDecimal.class, new BigDecimalExtractor());
+
+        registerType(Types.DOUBLE, Float.TYPE, new FloatPrimitiveExtractor());
+        registerType(Types.DOUBLE, Float.class, new FloatExtractor());
+        registerType(Types.DOUBLE, Double.TYPE, new DoublePrimitiveExtractor());
+        registerType(Types.DOUBLE, Double.class, new DoubleExtractor());
+        registerType(Types.DOUBLE, BigDecimal.class, new BigDecimalExtractor());
+
+        registerType(Types.DECIMAL, Float.TYPE, new FloatPrimitiveExtractor());
+        registerType(Types.DECIMAL, Float.class, new FloatExtractor());
+        registerType(Types.DECIMAL, Double.TYPE, new DoublePrimitiveExtractor());
+        registerType(Types.DECIMAL, Double.class, new DoubleExtractor());
+        registerType(Types.DECIMAL, BigDecimal.class, new BigDecimalExtractor());
+
+        registerType(Types.NUMERIC, Float.TYPE, new FloatPrimitiveExtractor());
+        registerType(Types.NUMERIC, Float.class, new FloatExtractor());
+        registerType(Types.NUMERIC, Double.TYPE, new DoublePrimitiveExtractor());
+        registerType(Types.NUMERIC, Double.class, new DoubleExtractor());
+        registerType(Types.NUMERIC, BigDecimal.class, new BigDecimalExtractor());
+
         registerType(Types.VARCHAR, String.class, ((columnIndex, results) -> results.getString(columnIndex)));
 
         registerType(Types.DATE, java.util.Date.class, new JavaUtilDateExtractor());
         registerType(Types.DATE, java.sql.Date.class, new JavaSqlDateExtractor());
         registerType(Types.DATE, java.sql.Timestamp.class, new TimestampExtractor());
+
         registerType(Types.TIMESTAMP, java.util.Date.class, new JavaUtilDateExtractor());
         registerType(Types.TIMESTAMP, java.sql.Date.class, new JavaSqlDateExtractor());
         registerType(Types.TIMESTAMP, java.sql.Timestamp.class, new TimestampExtractor());
@@ -96,6 +128,11 @@ public class SupportedTypesRegistered implements SupportedTypes {
         registerType(java.util.Date.class, (index, value, statement) -> statement.setTimestamp(index, new Timestamp(((java.util.Date) value).getTime())));
         registerType(java.sql.Date.class, (index, value, statement) -> statement.setDate(index, (java.sql.Date) value));
         registerType(java.sql.Timestamp.class, (index, value, statement) -> statement.setTimestamp(index, (java.sql.Timestamp) value));
+        registerType(Float.TYPE, (index, value, statement) -> statement.setFloat(index, (float) value));
+        registerType(Double.TYPE, (index, value, statement) -> statement.setDouble(index, (double) value));
+        registerType(Float.class, (index, value, statement) -> statement.setObject(index, value));
+        registerType(Double.class, (index, value, statement) -> statement.setObject(index, value));
+        registerType(BigDecimal.class, (index, value, statement) -> statement.setObject(index, value));
         registerType(null, (index, value, statement) -> statement.setObject(index, null));
     }
 
