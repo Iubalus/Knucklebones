@@ -7,6 +7,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -47,13 +48,25 @@ public class Persistence implements AutoCloseable {
     }
 
     /**
+     * Creating a native query will require a sql expression that can contain colon parameters.
+     * Parameters in the string will need to be populates with {@link UncheckedNativeQuery#setParameter(String, Object)}
+     * using colon parameters will sanitize the provided value.
+     *
+     * @param query a string containing colon parameters.
+     * @return a new {@link UncheckedNativeQuery}
+     */
+    public UncheckedNativeQuery createNativeQuery(String query) {
+        return new UncheckedNativeQuery(query);
+    }
+
+    /**
      * @return the {@link SupportedTypes} for this persistence.
      */
     public SupportedTypes getSupportedTypes() {
         return supportedTypes;
     }
 
-    SupportedTypesRegistered getSupportedTypesRegistered(){
+    SupportedTypesRegistered getSupportedTypesRegistered() {
         return supportedTypes;
     }
 
@@ -143,6 +156,89 @@ public class Persistence implements AutoCloseable {
             } catch (SQLException e) {
                 throw new KnuckleBonesException.CouldNotFetchData(e);
             }
+        }
+    }
+
+    /**
+     * An Unchecked Native Query allows a user to get results form a sql query.
+     * It will perform parameter sanitation on any colon parameters that are set using
+     * {@link UncheckedNativeQuery#setParameter}.
+     * <p>
+     * Results can be retrieved by either {@link UncheckedNativeQuery#findSingleResult()} or
+     * {@link UncheckedNativeQuery#findResultList()}
+     */
+    public class UncheckedNativeQuery {
+        private final ParameterizedQuery parameterizedQuery;
+        private final HashMap<String, Object> parameters = new HashMap<>();
+
+        private UncheckedNativeQuery(String query) {
+            this.parameterizedQuery = ParameterizedQuery.create(query);
+        }
+
+        /**
+         * @param key   the name of the colon parameter in the query to replace
+         * @param value the value to use when running the query
+         * @return this to allow for chaining.
+         */
+        public UncheckedNativeQuery setParameter(String key, Object value) {
+            this.parameters.put(key, value);
+            return this;
+        }
+
+        /**
+         * Executes the query with the provided parameters expecting exactly one result to be returned.
+         *
+         * @param <DesiredType> the expected type should be either an Object[] if more than one column is specified in the result
+         *                      or if the result has only one column the expected type of that column.
+         * @return the first row in the result after running the query with the provided parameters.
+         */
+        public <DesiredType> DesiredType findSingleResult() {
+            List<DesiredType> resultList = findResultList();
+
+            if (resultList.size() != 1) {
+                throw new KnuckleBonesException("One recorded expected found " + resultList.size());
+            }
+
+            return resultList.get(0);
+        }
+
+        /**
+         * Executes the query with the provided parameters.
+         *
+         * @param <DesiredType> the expected type should be either a List of Object[] if more than one column is specified in the result
+         *                      or if the result has only one column a List of the expected type of that column.
+         * @return the first row in the result after running the query with the provided parameters.
+         */
+        @SuppressWarnings("unchecked")
+        public <DesiredType> List<DesiredType> findResultList() {
+            parameterizedQuery.setParameters(parameters);
+            ArrayList<Object> resultList = new ArrayList<>();
+
+            PreparedStatementExecutor executor = new PreparedStatementExecutor();
+            try (PreparedStatement statement = executor.execute(
+                    connection,
+                    parameterizedQuery.getQuery(),
+                    parameterizedQuery.getParameters(),
+                    supportedTypes
+            )) {
+                try (ResultSet result = statement.executeQuery()) {
+                    int columnCount = result.getMetaData().getColumnCount();
+                    while (result.next()) {
+                        if (columnCount > 1) {
+                            Object[] resultRow = new Object[columnCount];
+                            for (int i = 0; i < columnCount; i++) {
+                                resultRow[i] = result.getObject(i + 1);
+                            }
+                            resultList.add(resultRow);
+                        } else {
+                            resultList.add(result.getObject(1));
+                        }
+                    }
+                }
+            } catch (SQLException e) {
+                throw new KnuckleBonesException.CouldNotFetchData(e);
+            }
+            return (List<DesiredType>) resultList;
         }
     }
 }

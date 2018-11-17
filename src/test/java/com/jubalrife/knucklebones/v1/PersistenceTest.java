@@ -9,6 +9,7 @@ import org.junit.Test;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -142,6 +143,37 @@ public class PersistenceTest extends WithInMemoryDB {
         id.columnA = 1;
 
         getPersistence().delete(id);
+    }
+
+    @Test
+    public void testUncheckQueryWithSingleRowSingleValue() {
+        Integer singleResult = getPersistence().createNativeQuery("SELECT 1").findSingleResult();
+        assertThat(singleResult, is(1));
+    }
+
+    @Test
+    public void testUncheckQueryWithSingleRowMultipleValues() {
+        Object[] singleResult = getPersistence().createNativeQuery("SELECT 1,2,3").findSingleResult();
+        assertThat(singleResult, is(new Object[]{1, 2, 3}));
+    }
+
+    @Test
+    public void testUncheckQueryWithMultipleRowSingleValue() {
+        List<Integer> singleResult = getPersistence()
+                .createNativeQuery("SELECT 1 UNION SELECT 2 UNION SELECT 3")
+                .findResultList();
+        assertThat(singleResult, is(Arrays.asList(1, 2, 3)));
+    }
+
+    @Test
+    public void testUncheckQueryWithMultipleRowMultipleValues() {
+        List<Object[]> singleResult = getPersistence()
+                .createNativeQuery("SELECT 1,2,3 UNION SELECT 4,5,6 UNION SELECT 7,8,9")
+                .findResultList();
+
+        assertThat(singleResult.get(0), is(new Object[]{1, 2, 3}));
+        assertThat(singleResult.get(1), is(new Object[]{4, 5, 6}));
+        assertThat(singleResult.get(2), is(new Object[]{7, 8, 9}));
     }
 
     @Table(name = "TableA")
