@@ -26,3 +26,7 @@ build/*
 gradle/wrapper/gradle-wrapper.properties
 .idea/*
 out/test/*
+secret.pgp
+sign.gradle
+./gradlew
+./gradlew.bat
