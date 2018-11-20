@@ -27,8 +27,5 @@ gradle/wrapper/gradle-wrapper.properties
 .idea/*
 out/test/*
 secret.pgp
-sign.gradle
-./gradlew
-./gradlew.bat
 gradlew.bat
 gradlew
