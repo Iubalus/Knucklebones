@@ -40,7 +40,7 @@ publishing {
         mavenJava(MavenPublication) {
             customizePom(pom)
             groupId 'com.jubalrife'
-            artifactId 'knucklebones-java'
+            artifactId 'knucklebones'
             version '1.0.0'
 
             from components.java
