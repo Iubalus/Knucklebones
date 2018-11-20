@@ -30,3 +30,5 @@ secret.pgp
 sign.gradle
 ./gradlew
 ./gradlew.bat
+gradlew.bat
+gradlew
