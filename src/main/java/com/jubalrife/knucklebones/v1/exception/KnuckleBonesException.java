@@ -77,4 +77,10 @@ public class KnuckleBonesException extends RuntimeException {
             super("Unable to map a null value into a primitive type. Null value was retrieved from column " + columnIndex);
         }
     }
+
+    public static class ExpectedSingeResult extends KnuckleBonesException{
+        public ExpectedSingeResult(int found) {
+            super("One recorded expected found " + found);
+        }
+    }
 }

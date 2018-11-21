@@ -161,7 +161,7 @@ public class PersistenceTest extends WithInMemoryDB {
     public void testUncheckQueryWithMultipleRowSingleValue() {
         List<Integer> singleResult = getPersistence()
                 .createNativeQuery("SELECT 1 UNION SELECT 2 UNION SELECT 3")
-                .findResultList();
+                .findResults();
         assertThat(singleResult, is(Arrays.asList(1, 2, 3)));
     }
 
@@ -169,7 +169,7 @@ public class PersistenceTest extends WithInMemoryDB {
     public void testUncheckQueryWithMultipleRowMultipleValues() {
         List<Object[]> singleResult = getPersistence()
                 .createNativeQuery("SELECT 1,2,3 UNION SELECT 4,5,6 UNION SELECT 7,8,9")
-                .findResultList();
+                .findResults();
 
         assertThat(singleResult.get(0), is(new Object[]{1, 2, 3}));
         assertThat(singleResult.get(1), is(new Object[]{4, 5, 6}));

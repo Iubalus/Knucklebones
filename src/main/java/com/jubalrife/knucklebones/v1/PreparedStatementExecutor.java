@@ -3,6 +3,7 @@ package com.jubalrife.knucklebones.v1;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.List;
 
 public class PreparedStatementExecutor {
@@ -12,7 +13,7 @@ public class PreparedStatementExecutor {
             List<Object> parameters,
             SupportedTypesRegistered supportedTypes
     ) throws SQLException {
-        PreparedStatement statement = connection.prepareStatement(query);
+        PreparedStatement statement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
         for (int i = 0; i < parameters.size(); i++) {
             Object parameter = parameters.get(i);
             supportedTypes

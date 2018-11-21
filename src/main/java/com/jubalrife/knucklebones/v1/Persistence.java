@@ -134,6 +134,11 @@ public class Persistence implements AutoCloseable {
             parameterizedQuery = ParameterizedQuery.create(sql);
         }
 
+        /**
+         * @param key   the name of the colon parameter in the query to replace
+         * @param value the value to use when running the query
+         * @return this to allow for chaining.
+         */
         public NativeQuery<QueryResultType> setParameter(String key, Object value) {
             this.parameters.put(key, value);
             return this;
@@ -157,6 +162,15 @@ public class Persistence implements AutoCloseable {
                 throw new KnuckleBonesException.CouldNotFetchData(e);
             }
         }
+
+        public QueryResultType findSingleResult() {
+            List<QueryResultType> results = findResults();
+            if (results.size() != 1) {
+                throw new KnuckleBonesException.ExpectedSingeResult(results.size());
+            }
+            return results.get(0);
+        }
+
     }
 
     /**
@@ -165,7 +179,7 @@ public class Persistence implements AutoCloseable {
      * {@link UncheckedNativeQuery#setParameter}.
      * <p>
      * Results can be retrieved by either {@link UncheckedNativeQuery#findSingleResult()} or
-     * {@link UncheckedNativeQuery#findResultList()}
+     * {@link UncheckedNativeQuery#findResults()}
      */
     public class UncheckedNativeQuery {
         private final ParameterizedQuery parameterizedQuery;
@@ -193,13 +207,13 @@ public class Persistence implements AutoCloseable {
          * @return the first row in the result after running the query with the provided parameters.
          */
         public <DesiredType> DesiredType findSingleResult() {
-            List<DesiredType> resultList = findResultList();
+            List<DesiredType> results = findResults();
 
-            if (resultList.size() != 1) {
-                throw new KnuckleBonesException("One recorded expected found " + resultList.size());
+            if (results.size() != 1) {
+                throw new KnuckleBonesException.ExpectedSingeResult(results.size());
             }
 
-            return resultList.get(0);
+            return results.get(0);
         }
 
         /**
@@ -210,7 +224,7 @@ public class Persistence implements AutoCloseable {
          * @return the first row in the result after running the query with the provided parameters.
          */
         @SuppressWarnings("unchecked")
-        public <DesiredType> List<DesiredType> findResultList() {
+        public <DesiredType> List<DesiredType> findResults() {
             parameterizedQuery.setParameters(parameters);
             ArrayList<Object> resultList = new ArrayList<>();
 

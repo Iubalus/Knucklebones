@@ -39,6 +39,15 @@ public class SupportedTypesRegistered implements SupportedTypes {
         registerType(Types.BIGINT, Byte.class, new ByteExtractor());
         registerType(Types.BIGINT, Byte.TYPE, new BytePrimitiveExtractor());
 
+        registerType(Types.NUMERIC, Long.class, new LongExtractor());
+        registerType(Types.NUMERIC, Long.TYPE, new LongPrimitiveExtractor());
+        registerType(Types.NUMERIC, Integer.class, new IntegerExtractor());
+        registerType(Types.NUMERIC, Integer.TYPE, new IntExtractor());
+        registerType(Types.NUMERIC, Short.class, new ShortExtractor());
+        registerType(Types.NUMERIC, Short.TYPE, new ShortPrimitiveExtractor());
+        registerType(Types.NUMERIC, Byte.class, new ByteExtractor());
+        registerType(Types.NUMERIC, Byte.TYPE, new BytePrimitiveExtractor());
+
         registerType(Types.INTEGER, Long.class, new LongExtractor());
         registerType(Types.INTEGER, Long.TYPE, new LongPrimitiveExtractor());
         registerType(Types.INTEGER, Integer.class, new IntegerExtractor());
