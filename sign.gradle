@@ -55,14 +55,14 @@ publishing {
                     extension = 'pom.asc'
                 }
             }
-            
+
             artifact(sourceJar) {
                 classifier = 'sources'
             }
             artifact(javadocJar) {
                 classifier = 'javadoc'
             }
-            
+
             // create the signed artifacts
             project.tasks.signArchives.signatureFiles.each {
                 artifact(it) {
@@ -74,15 +74,15 @@ publishing {
                     }
                     extension = 'jar.asc'
                 }
-            }            
+            }
         }
     }
     repositories {
         maven {
             url "https://oss.sonatype.org/service/local/staging/deploy/maven2"
             credentials {
-                username sonatypeUsername
-                password sonatypePassword
+                username project.findProperty("sonatypeUsername")
+                password project.findProperty("sonatypePassword")
             }
         }
     }
@@ -95,7 +95,7 @@ def customizePom(pom) {
         root.dependencies.removeAll { dep ->
             dep.scope == "test"
         }
-        
+
         root.children().last() + {
             resolveStrategy = Closure.DELEGATE_FIRST
 
