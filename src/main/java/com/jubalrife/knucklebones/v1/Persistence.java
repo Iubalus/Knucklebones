@@ -120,8 +120,12 @@ public class Persistence implements AutoCloseable {
     /**
      * Closes the underlying connection.
      */
-    public void close() throws Exception {
-        connection.close();
+    public void close() {
+        try {
+            connection.close();
+        } catch (SQLException e) {
+            throw new KnuckleBonesException("Unable to close connection.", e);
+        }
     }
 
     public class NativeQuery<QueryResultType> {
@@ -198,6 +202,26 @@ public class Persistence implements AutoCloseable {
             this.parameters.put(key, value);
             return this;
         }
+
+        /**
+         * Executes the statement as an update. The number of rows modified will be returned.
+         *
+         * @return the number of rows modified in the update statement.
+         */
+        public int executeUpdate() {
+            PreparedStatementExecutor executor = new PreparedStatementExecutor();
+            try (PreparedStatement statement = executor.execute(
+                    connection,
+                    parameterizedQuery.getQuery(),
+                    parameterizedQuery.getParameters(),
+                    supportedTypes
+            )) {
+                return statement.executeUpdate();
+            } catch (SQLException e) {
+                throw new KnuckleBonesException.CouldNotUpdateData(e);
+            }
+        }
+
 
         /**
          * Executes the query with the provided parameters expecting exactly one result to be returned.
