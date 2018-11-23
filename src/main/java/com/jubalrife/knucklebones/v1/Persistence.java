@@ -210,6 +210,7 @@ public class Persistence implements AutoCloseable {
          */
         public int executeUpdate() {
             PreparedStatementExecutor executor = new PreparedStatementExecutor();
+            parameterizedQuery.setParameters(parameters);
             try (PreparedStatement statement = executor.execute(
                     connection,
                     parameterizedQuery.getQuery(),
