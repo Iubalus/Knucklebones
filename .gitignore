@@ -26,6 +26,5 @@ build/*
 gradle/wrapper/gradle-wrapper.properties
 .idea/*
 out/test/*
-secret.pgp
 gradlew.bat
 gradlew
