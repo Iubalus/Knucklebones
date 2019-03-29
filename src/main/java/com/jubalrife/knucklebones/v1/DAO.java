@@ -76,14 +76,7 @@ public class DAO<Type> {
         try {
             while (resultSet.next()) {
                 Type type = newInstance();
-                for (Map.Entry<DAOColumnField, Integer> toMap : fieldToColumn.entrySet()) {
-                    DAOColumnField key = toMap.getKey();
-                    try {
-                        key.getField().set(type, extractValue(resultSet, toMap, key, supportedTypes));
-                    } catch (IllegalAccessException e) {
-                        throw new KnuckleBonesException.PropertyInaccessible(key.getField(), getType(), e);
-                    }
-                }
+                fillObject(resultSet, supportedTypes, type, fieldToColumn);
                 results.add(type);
             }
         } catch (SQLException e) {
@@ -91,6 +84,31 @@ public class DAO<Type> {
         }
 
         return results;
+    }
+
+    public void fillFromResultSet(ResultSet resultSet, SupportedTypesRegistered supportedTypes, Type instance) {
+        Map<DAOColumnField, Integer> fieldToColumn = createFieldToColumnMapping(resultSet);
+        try {
+            if (resultSet.next()) {
+                fillObject(resultSet, supportedTypes, instance, fieldToColumn);
+            } else {
+                throw new KnuckleBonesException.CouldNotFetchData();
+            }
+        } catch (SQLException e) {
+            throw new KnuckleBonesException.CouldNotFetchData(e);
+        }
+
+    }
+
+    private void fillObject(ResultSet resultSet, SupportedTypesRegistered supportedTypes, Type instance, Map<DAOColumnField, Integer> fieldToColumn) throws SQLException {
+        for (Map.Entry<DAOColumnField, Integer> toMap : fieldToColumn.entrySet()) {
+            DAOColumnField key = toMap.getKey();
+            try {
+                key.getField().set(instance, extractValue(resultSet, toMap, key, supportedTypes));
+            } catch (IllegalAccessException e) {
+                throw new KnuckleBonesException.PropertyInaccessible(key.getField(), getType(), e);
+            }
+        }
     }
 
     private Map<DAOColumnField, Integer> createFieldToColumnMapping(ResultSet resultSet) {

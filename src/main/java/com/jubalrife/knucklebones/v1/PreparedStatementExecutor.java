@@ -14,12 +14,25 @@ public class PreparedStatementExecutor {
             SupportedTypesRegistered supportedTypes
     ) throws SQLException {
         PreparedStatement statement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+        setParameters(parameters, supportedTypes, statement);
+        return statement;
+    }
+
+    public PreparedStatement prepareUpdate(Connection connection, String query) throws SQLException {
+        return connection.prepareStatement(query);
+    }
+
+    public void setParameters(List<Object> parameters, SupportedTypesRegistered supportedTypes, PreparedStatement statement) throws SQLException {
+        statement.clearParameters();
         for (int i = 0; i < parameters.size(); i++) {
             Object parameter = parameters.get(i);
             supportedTypes
                     .getRefiner(parameter == null ? null : parameter.getClass())
                     .refine(i + 1, parameter, statement);
         }
-        return statement;
+    }
+
+    public PreparedStatement prepareInsert(Connection connection, String query) throws SQLException {
+        return connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
     }
 }

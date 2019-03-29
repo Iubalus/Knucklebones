@@ -35,8 +35,22 @@ public class Persistence implements AutoCloseable {
         return dialect.insert(connection, DAOFactory.create((Class<ResultType>) o.getClass()), o, supportedTypes);
     }
 
+    @SuppressWarnings("unchecked")
+    public <ResultType> void insert(List<ResultType> o) {
+        if (o.isEmpty()) return;
+
+        dialect.insert(connection, DAOFactory.create((Class<ResultType>) o.get(0).getClass()), o, supportedTypes);
+    }
+
     public int update(Object o) {
         return dialect.update(connection, DAOFactory.create(o.getClass()), o, supportedTypes);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <Type> int update(List<Type> o) {
+        if (o.isEmpty()) return 0;
+        DAO<Type> daoMeta = (DAO<Type>) DAOFactory.create(o.get(0).getClass());
+        return dialect.update(connection, daoMeta, o, supportedTypes);
     }
 
     public int delete(Object o) {

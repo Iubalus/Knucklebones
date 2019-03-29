@@ -7,41 +7,17 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class GenericInsert {
     public <Type> Type insert(DAO<Type> meta, Type o, Connection connection, SupportedTypesRegistered supportedTypes) {
-        List<DAOColumnField> columns1 = meta.getColumns();
-        SQLWithParameters sql = new SQLWithParameters();
-        sql.append("INSERT INTO ");
-        sql.append(meta.getTableName());
-        sql.append("(");
-        String sep = "";
-
-        for (DAOColumnField DAOColumnField1 : columns1) {
-            if (!DAOColumnField1.isGenerated()) {
-                sql.append(sep);
-                sql.append(DAOColumnField1.getName());
-                sep = ", ";
-            }
-        }
-        sql.append(") VALUES (");
-        sep = "";
-        for (DAOColumnField DAOColumnField1 : columns1) {
-            if (!DAOColumnField1.isGenerated()) {
-                sql.append(sep);
-                sql.append("?");
-                sql.add(DAOColumnField1.getField(), o);
-                sep = ", ";
-            }
-        }
-        sql.append(")");
-
+        String query = createQuery(meta);
         PreparedStatementExecutor executor = new PreparedStatementExecutor();
         try (PreparedStatement statement = executor.execute(
                 connection,
-                sql.getSql(),
-                sql.getParameters(),
+                query,
+                extractParameters(meta, o),
                 supportedTypes
         )) {
             statement.executeUpdate();
@@ -53,25 +29,104 @@ public class GenericInsert {
 
             ResultSet keys = statement.getGeneratedKeys();
             if (keys.next()) {
-                Object o1 = supportedTypes
-                        .getExtractor(keys.getMetaData().getColumnType(1), generatedKey.getField().getType()).extract(1, keys);
+                Object generatedValue = supportedTypes
+                        .getExtractor(keys.getMetaData().getColumnType(1), generatedKey.getField().getType())
+                        .extract(1, keys);
+
                 try {
-                    generatedKey.getField().set(o, o1);
+                    generatedKey.getField().set(o, generatedValue);
                 } catch (IllegalAccessException e) {
                     throw new KnuckleBonesException.PropertyInaccessible(generatedKey.getField(), meta.getType(), e);
                 }
             }
 
             if (meta.hasAdditionalGeneratedColumns()) {
-                return new GenericFindSingle().find(connection, o, DAOFactory.create(meta.getType()),
-                        supportedTypes
-                );
+                return new GenericFindSingle().find(connection, o, DAOFactory.create(meta.getType()), supportedTypes);
+            } else {
+                return o;
             }
-
         } catch (SQLException e) {
             throw new KnuckleBonesException("Unable to insert", e);
         }
+    }
 
-        return o;
+    public <Type> void insert(DAO<Type> meta, List<Type> insertList, Connection connection, SupportedTypesRegistered supportedTypes) {
+        String query = createQuery(meta);
+        PreparedStatementExecutor executor = new PreparedStatementExecutor();
+        try (PreparedStatement statement = executor.prepareInsert(
+                connection,
+                query
+        )) {
+            for (Type record : insertList) {
+                executor.setParameters(extractParameters(meta, record), supportedTypes, statement);
+                statement.executeUpdate();
+                ResultSet keys = statement.getGeneratedKeys();
+                DAOColumnField generatedKey = meta.getGeneratedId();
+                if (generatedKey == null) continue;
+
+                if (keys.next()) {
+                    Object generatedValue = supportedTypes
+                            .getExtractor(keys.getMetaData().getColumnType(1), generatedKey.getField().getType())
+                            .extract(1, keys);
+
+
+                    try {
+                        generatedKey.getField().set(record, generatedValue);
+                    } catch (IllegalAccessException e) {
+                        throw new KnuckleBonesException.PropertyInaccessible(generatedKey.getField(), meta.getType(), e);
+                    }
+
+                    if (meta.hasAdditionalGeneratedColumns()) {
+                        new GenericFindSingle().find(connection, record, DAOFactory.create(meta.getType()), supportedTypes);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            throw new KnuckleBonesException("Unable to insert", e);
+        }
+    }
+
+
+    private <Type> List<Object> extractParameters(DAO<Type> meta, Type object) {
+        ArrayList<Object> params = new ArrayList<>();
+        for (DAOColumnField field : meta.getColumns()) {
+            if (!field.isGenerated()) {
+                try {
+                    params.add(field.getField().get(object));
+                } catch (IllegalAccessException e) {
+                    throw new KnuckleBonesException.PropertyInaccessible(field.getField(), field.getField().getDeclaringClass(), e);
+                }
+            }
+        }
+        return params;
+
+    }
+
+    private <Type> String createQuery(DAO<Type> meta) {
+        List<DAOColumnField> columns = meta.getColumns();
+        StringBuilder sql = new StringBuilder();
+        sql.append("INSERT INTO ");
+        sql.append(meta.getTableName());
+        sql.append("(");
+        String sep = "";
+
+        for (DAOColumnField field : columns) {
+            if (!field.isGenerated()) {
+                sql.append(sep);
+                sql.append(field.getName());
+                sep = ", ";
+            }
+        }
+        sql.append(") VALUES (");
+        sep = "";
+        for (DAOColumnField field : columns) {
+            if (!field.isGenerated()) {
+                sql.append(sep);
+                sql.append("?");
+                sep = ", ";
+            }
+        }
+        sql.append(")");
+        return sql.toString();
     }
 }

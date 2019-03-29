@@ -9,12 +9,74 @@ import com.jubalrife.knucklebones.v1.exception.KnuckleBonesException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class GenericUpdate {
     public <Type> int update(DAO<Type> daoMeta, Object dao, Connection connection, SupportedTypesRegistered supportedTypes) {
-        if (daoMeta.getNumberOfIdColumns() == 0) throw new KnuckleBonesException.OperationRequiresIdOnAtLeastOneField(daoMeta.getType());
+        if (daoMeta.getNumberOfIdColumns() == 0)
+            throw new KnuckleBonesException.OperationRequiresIdOnAtLeastOneField(daoMeta.getType());
 
-        SQLWithParameters sql = new SQLWithParameters();
+        String query = createQuery(daoMeta);
+
+        PreparedStatementExecutor executor = new PreparedStatementExecutor();
+        try (PreparedStatement statement = executor.prepareUpdate(
+                connection,
+                query
+        )) {
+            executor.setParameters(extractParameters(daoMeta, dao), supportedTypes, statement);
+            return statement.executeUpdate();
+        } catch (SQLException e) {
+            throw new KnuckleBonesException.CouldNotUpdateData(e);
+        }
+    }
+
+    public <Type> int update(DAO<Type> daoMeta, List<Type> dao, Connection connection, SupportedTypesRegistered supportedTypes) {
+        if (daoMeta.getNumberOfIdColumns() == 0)
+            throw new KnuckleBonesException.OperationRequiresIdOnAtLeastOneField(daoMeta.getType());
+
+        String query = createQuery(daoMeta);
+
+        PreparedStatementExecutor executor = new PreparedStatementExecutor();
+        try (PreparedStatement statement = executor.prepareUpdate(
+                connection,
+                query
+        )) {
+            int updated = 0;
+            for (Type type : dao) {
+                executor.setParameters(extractParameters(daoMeta, type), supportedTypes, statement);
+                updated += statement.executeUpdate();
+            }
+            return updated;
+        } catch (SQLException e) {
+            throw new KnuckleBonesException.CouldNotUpdateData(e);
+        }
+    }
+
+    private <Type> List<Object> extractParameters(DAO<Type> daoMeta, Object dao) {
+        ArrayList<Object> results = new ArrayList<>();
+        for (DAOColumnField field : daoMeta.getColumns()) {
+            try {
+                if (field.isId()) continue;
+                results.add(field.getField().get(dao));
+            } catch (IllegalAccessException e) {
+                throw new KnuckleBonesException.PropertyInaccessible(field.getField(), field.getField().getDeclaringClass(), e);
+            }
+        }
+
+        for (DAOColumnField field : daoMeta.getColumns()) {
+            try {
+                if (!field.isId()) continue;
+                results.add(field.getField().get(dao));
+            } catch (IllegalAccessException e) {
+                throw new KnuckleBonesException.PropertyInaccessible(field.getField(), field.getField().getDeclaringClass(), e);
+            }
+        }
+        return results;
+    }
+
+    private <Type> String createQuery(DAO<Type> daoMeta) {
+        StringBuilder sql = new StringBuilder();
         sql.append("UPDATE ");
         sql.append(daoMeta.getTableName());
         sql.append(" SET ");
@@ -25,7 +87,6 @@ public class GenericUpdate {
             sql.append(sep);
             sql.append(daoColumnField.getName());
             sql.append(" = ?");
-            sql.add(daoColumnField.getField(), dao);
             sep = ", ";
         }
 
@@ -36,21 +97,10 @@ public class GenericUpdate {
             if (!daoColumnField.isId()) continue;
             sql.append(daoColumnField.getName());
             sql.append(" = ?");
-            sql.add(daoColumnField.getField(), dao);
             sql.append(sep);
 
             sep = " AND ";
         }
-
-        try (PreparedStatement statement = new PreparedStatementExecutor().execute(
-                connection,
-                sql.getSql(),
-                sql.getParameters(),
-                supportedTypes
-        )) {
-            return statement.executeUpdate();
-        } catch (SQLException e) {
-            throw new KnuckleBonesException.CouldNotUpdateData(e);
-        }
+        return sql.toString();
     }
 }

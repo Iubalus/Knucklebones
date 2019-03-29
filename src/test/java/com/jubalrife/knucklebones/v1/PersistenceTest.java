@@ -10,6 +10,7 @@ import org.junit.Test;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -109,7 +110,7 @@ public class PersistenceTest extends WithInMemoryDB {
         assertThat(updated.columnB, is("Updated"));
     }
 
-    @Test
+    @Test(expected = KnuckleBonesException.CouldNotFetchData.class)
     public void deleteSucceedsWhenIdIsPresent() {
         TableAWithId id = new TableAWithId();
         id.columnA = 1;
@@ -118,7 +119,7 @@ public class PersistenceTest extends WithInMemoryDB {
         int deleted = persistence.delete(id);
 
         assertThat(deleted, is(1));
-        assertNull(persistence.find(id));
+        persistence.find(id);
     }
 
     @Test(expected = KnuckleBonesException.OperationRequiresIdOnAtLeastOneField.class)
@@ -200,6 +201,20 @@ public class PersistenceTest extends WithInMemoryDB {
         assertThat(finalResult.columnC, is(2));
         assertThat(finalResult.columnD, is(2));
         assertThat(finalResult.columnE, is(2));
+
+    }
+
+    @Test
+    public void bulkInsert() {
+        ArrayList<TableWithMultipleColumns> toSave = new ArrayList<>();
+        for (int i = 0; i < 100; i++) {
+            toSave.add(new TableWithMultipleColumns());
+        }
+
+        getPersistence().insert(toSave);
+
+        Long count = getPersistence().createNativeQuery("SELECT COUNT(*) FROM TableWithMultipleColumns").findSingleResult();
+        assertThat(count, is(100L));
 
     }
 

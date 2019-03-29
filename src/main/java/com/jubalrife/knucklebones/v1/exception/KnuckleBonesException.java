@@ -24,6 +24,10 @@ public class KnuckleBonesException extends RuntimeException {
         public CouldNotFetchData(Throwable cause) {
             super("Failed to fetch data", cause);
         }
+
+        public CouldNotFetchData() {
+            super("Failed to fetch data");
+        }
     }
 
     public static class CouldNotUpdateData extends KnuckleBonesException {
