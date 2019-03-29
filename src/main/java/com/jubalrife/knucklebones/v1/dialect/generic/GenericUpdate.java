@@ -22,10 +22,10 @@ public class GenericUpdate {
         for (DAOColumnField daoColumnField : daoMeta.getColumns()) {
             if (daoColumnField.isId()) continue;
 
+            sql.append(sep);
             sql.append(daoColumnField.getName());
             sql.append(" = ?");
             sql.add(daoColumnField.getField(), dao);
-            sql.append(sep);
             sep = ", ";
         }
 

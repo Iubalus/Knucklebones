@@ -1,6 +1,7 @@
 package com.jubalrife.knucklebones.v1;
 
 import com.WithInMemoryDB;
+import com.jubalrife.knucklebones.v1.annotation.Column;
 import com.jubalrife.knucklebones.v1.annotation.GeneratedValue;
 import com.jubalrife.knucklebones.v1.annotation.Id;
 import com.jubalrife.knucklebones.v1.annotation.Table;
@@ -176,6 +177,32 @@ public class PersistenceTest extends WithInMemoryDB {
         assertThat(singleResult.get(2), is(new Object[]{7, 8, 9}));
     }
 
+    @Test
+    public void testInsertUpdateWithMulipleColumns() {
+        TableWithMultipleColumns row = new TableWithMultipleColumns();
+        row.columnA = 1;
+        row.columnB = 1;
+        row.columnC = 1;
+        row.columnD = 1;
+        row.columnE = 1;
+
+        getPersistence().insert(row);
+        TableWithMultipleColumns found = getPersistence().find(row);
+
+        found.columnB = 2;
+        found.columnC = 2;
+        found.columnD = 2;
+        found.columnE = 2;
+        getPersistence().update(found);
+        TableWithMultipleColumns finalResult = getPersistence().find(row);
+        assertThat(finalResult.columnA, is(1));
+        assertThat(finalResult.columnB, is(2));
+        assertThat(finalResult.columnC, is(2));
+        assertThat(finalResult.columnD, is(2));
+        assertThat(finalResult.columnE, is(2));
+
+    }
+
     @Table(name = "TableA")
     public static class TableADAO {
         public Integer columnA;
@@ -187,6 +214,21 @@ public class PersistenceTest extends WithInMemoryDB {
         @Id
         public Integer columnA;
         public String columnB;
+    }
+
+    public static class TableWithMultipleColumns {
+        @Id
+        @Column(name = "COLUMN_A")
+        public Integer columnA;
+        @Column(name = "COLUMN_B")
+        public Integer columnB;
+        @Column(name = "COLUMN_C")
+        public Integer columnC;
+        @Column(name = "COLUMN_D")
+        public Integer columnD;
+        @Column(name = "COLUMN_E")
+        public Integer columnE;
+
     }
 
     public static class GeneratedColumns {
