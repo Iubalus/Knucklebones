@@ -1,7 +1,6 @@
 package com.jubalrife.knucklebones.v1.dialect.generic;
 
 import com.jubalrife.knucklebones.v1.DAO;
-import com.jubalrife.knucklebones.v1.DAOFactory;
 import com.jubalrife.knucklebones.v1.SupportedTypesRegistered;
 import com.jubalrife.knucklebones.v1.dialect.Dialect;
 

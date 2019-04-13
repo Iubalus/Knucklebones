@@ -18,43 +18,45 @@ public class Persistence implements AutoCloseable {
     private Connection connection;
     private Dialect dialect;
     private SupportedTypesRegistered supportedTypes;
+    private DAOFactory cache;
 
-    Persistence(Connection connection, Dialect dialect) {
+    Persistence(Connection connection, Dialect dialect, DAOFactory cache) {
         this.connection = connection;
         this.dialect = dialect;
+        this.cache = cache;
         supportedTypes = new SupportedTypesRegistered();
     }
 
     @SuppressWarnings("unchecked")
     public <ResultType> ResultType find(ResultType item) {
-        return dialect.find(connection, DAOFactory.create((Class<ResultType>) item.getClass()), item, supportedTypes);
+        return dialect.find(connection, cache.create((Class<ResultType>) item.getClass()), item, supportedTypes);
     }
 
     @SuppressWarnings("unchecked")
     public <ResultType> ResultType insert(ResultType o) {
-        return dialect.insert(connection, DAOFactory.create((Class<ResultType>) o.getClass()), o, supportedTypes);
+        return dialect.insert(connection, cache.create((Class<ResultType>) o.getClass()), o, supportedTypes);
     }
 
     @SuppressWarnings("unchecked")
     public <ResultType> void insert(List<ResultType> o) {
         if (o.isEmpty()) return;
 
-        dialect.insert(connection, DAOFactory.create((Class<ResultType>) o.get(0).getClass()), o, supportedTypes);
+        dialect.insert(connection, cache.create((Class<ResultType>) o.get(0).getClass()), o, supportedTypes);
     }
 
     public int update(Object o) {
-        return dialect.update(connection, DAOFactory.create(o.getClass()), o, supportedTypes);
+        return dialect.update(connection, cache.create(o.getClass()), o, supportedTypes);
     }
 
     @SuppressWarnings("unchecked")
     public <Type> int update(List<Type> o) {
         if (o.isEmpty()) return 0;
-        DAO<Type> daoMeta = (DAO<Type>) DAOFactory.create(o.get(0).getClass());
+        DAO<Type> daoMeta = (DAO<Type>) cache.create(o.get(0).getClass());
         return dialect.update(connection, daoMeta, o, supportedTypes);
     }
 
     public int delete(Object o) {
-        return dialect.delete(connection, DAOFactory.create(o.getClass()), o, supportedTypes);
+        return dialect.delete(connection, cache.create(o.getClass()), o, supportedTypes);
     }
 
     public <ResultType> NativeQuery<ResultType> createNativeQuery(String query, Class<ResultType> type) {
@@ -164,7 +166,7 @@ public class Persistence implements AutoCloseable {
 
         public List<QueryResultType> findResults() {
             parameterizedQuery.setParameters(parameters);
-            DAO<QueryResultType> dao = DAOFactory.create(type);
+            DAO<QueryResultType> dao = cache.create(type);
 
             PreparedStatementExecutor executor = new PreparedStatementExecutor();
             try (PreparedStatement statement = executor.execute(

@@ -10,6 +10,7 @@ import java.sql.SQLException;
 public class PersistenceFactory {
     private final DataSource dataSource;
     private final Dialect dialect;
+    private final DAOFactory factory;
 
     /**
      * Creates a Persistence Factory backed by the provided datasource. A {@link GenericDialect} is used by default.
@@ -31,6 +32,7 @@ public class PersistenceFactory {
     public PersistenceFactory(DataSource dataSource, Dialect dialect) {
         this.dataSource = dataSource;
         this.dialect = dialect;
+        this.factory = new DAOFactory();
     }
 
     /**
@@ -41,7 +43,7 @@ public class PersistenceFactory {
      */
     public Persistence create() {
         try {
-            return new Persistence(dataSource.getConnection(), dialect);
+            return new Persistence(dataSource.getConnection(), dialect, factory);
         } catch (SQLException e) {
             throw new KnuckleBonesException.CouldNotCreateConnection(e);
         }

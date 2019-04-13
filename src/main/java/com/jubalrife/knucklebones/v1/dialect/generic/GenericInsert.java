@@ -41,7 +41,7 @@ public class GenericInsert {
             }
 
             if (meta.hasAdditionalGeneratedColumns()) {
-                return new GenericFindSingle().find(connection, o, DAOFactory.create(meta.getType()), supportedTypes);
+                return new GenericFindSingle().find(connection, o, meta, supportedTypes);
             } else {
                 return o;
             }
@@ -77,7 +77,7 @@ public class GenericInsert {
                     }
 
                     if (meta.hasAdditionalGeneratedColumns()) {
-                        new GenericFindSingle().find(connection, record, DAOFactory.create(meta.getType()), supportedTypes);
+                        new GenericFindSingle().find(connection, record, meta, supportedTypes);
                     }
                 }
             }
