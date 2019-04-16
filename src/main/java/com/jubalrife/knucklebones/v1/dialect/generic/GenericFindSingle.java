@@ -6,13 +6,28 @@ import com.jubalrife.knucklebones.v1.SupportedTypesRegistered;
 import com.jubalrife.knucklebones.v1.exception.KnuckleBonesException;
 
 import java.sql.*;
-import java.util.List;
 
 public class GenericFindSingle {
     public <DAOType> DAOType find(Connection c, DAOType o, DAO<DAOType> daoMeta, SupportedTypesRegistered supportedTypes) {
         if (daoMeta.getNumberOfIdColumns() == 0)
             throw new KnuckleBonesException.OperationRequiresIdOnAtLeastOneField(daoMeta.getType());
 
+        SQLWithParameters sql = createQuery(daoMeta, o);
+
+
+        PreparedStatementExecutor executor = new PreparedStatementExecutor();
+        try (PreparedStatement find = executor.execute(c, sql.getSql(), sql.getParameters(), supportedTypes)) {
+            try (ResultSet s = find.executeQuery()) {
+                daoMeta.fillFromResultSet(s, supportedTypes, o);
+            }
+        } catch (SQLException e) {
+            throw new KnuckleBonesException.CouldNotFetchData(e);
+        }
+
+        return o;
+    }
+
+    <DAOType> SQLWithParameters createQuery(DAO<DAOType> daoMeta, DAOType o) {
         SQLWithParameters sql = new SQLWithParameters();
         sql.append("SELECT * FROM ");
         sql.append(daoMeta.getTableName());
@@ -27,18 +42,7 @@ public class GenericFindSingle {
             sql.append(" = ?");
             sep = " AND ";
         }
-
-
-        PreparedStatementExecutor executor = new PreparedStatementExecutor();
-        try (PreparedStatement find = executor.execute(c, sql.getSql(), sql.getParameters(), supportedTypes)) {
-            try (ResultSet s = find.executeQuery()) {
-                daoMeta.fillFromResultSet(s, supportedTypes, o);
-            }
-        } catch (SQLException e) {
-            throw new KnuckleBonesException.CouldNotFetchData(e);
-        }
-
-        return o;
+        return sql;
     }
 
 

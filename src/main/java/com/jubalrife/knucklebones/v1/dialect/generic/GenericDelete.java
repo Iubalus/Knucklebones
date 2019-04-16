@@ -12,23 +12,7 @@ import java.sql.SQLException;
 
 public class GenericDelete {
     public <DAOType> int delete(Connection connection, DAO<DAOType> daoMeta, Object dao, SupportedTypesRegistered supportedTypes) {
-        if (daoMeta.getNumberOfIdColumns() == 0) throw new KnuckleBonesException.OperationRequiresIdOnAtLeastOneField(daoMeta.getType());
-
-        SQLWithParameters sql = new SQLWithParameters();
-        sql.append("DELETE FROM ");
-        sql.append(daoMeta.getTableName());
-        sql.append(" WHERE ");
-
-        String sep = "";
-
-        for (DAOColumnField daoColumnField : daoMeta.getColumns()) {
-            if (!daoColumnField.isId()) continue;
-            sql.append(daoColumnField.getName());
-            sql.append(" = ?");
-            sql.add(daoColumnField.getField(), dao);
-            sql.append(sep);
-            sep = " AND ";
-        }
+        SQLWithParameters sql = createQuery(daoMeta, dao);
 
         try (PreparedStatement statement = new PreparedStatementExecutor().execute(
                 connection,
@@ -40,5 +24,26 @@ public class GenericDelete {
         } catch (SQLException e) {
             throw new KnuckleBonesException.CouldNotUpdateData(e);
         }
+    }
+
+    <DAOType> SQLWithParameters createQuery(DAO<DAOType> daoMeta, Object dao) {
+        if (daoMeta.getNumberOfIdColumns() == 0) throw new KnuckleBonesException.OperationRequiresIdOnAtLeastOneField(daoMeta.getType());
+
+        SQLWithParameters sql = new SQLWithParameters();
+        sql.append("DELETE FROM ");
+        sql.append(daoMeta.getTableName());
+        sql.append(" WHERE ");
+
+        String sep = "";
+
+        for (DAOColumnField daoColumnField : daoMeta.getColumns()) {
+            if (!daoColumnField.isId()) continue;
+            sql.append(sep);
+            sql.append(daoColumnField.getName());
+            sql.append(" = ?");
+            sql.add(daoColumnField.getField(), dao);
+            sep = " AND ";
+        }
+        return sql;
     }
 }

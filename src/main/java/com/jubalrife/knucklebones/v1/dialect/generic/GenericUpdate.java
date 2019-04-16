@@ -75,7 +75,7 @@ public class GenericUpdate {
         return results;
     }
 
-    private <Type> String createQuery(DAO<Type> daoMeta) {
+    <Type> String createQuery(DAO<Type> daoMeta) {
         StringBuilder sql = new StringBuilder();
         sql.append("UPDATE ");
         sql.append(daoMeta.getTableName());
@@ -95,9 +95,9 @@ public class GenericUpdate {
         sep = "";
         for (DAOColumnField daoColumnField : daoMeta.getColumns()) {
             if (!daoColumnField.isId()) continue;
+            sql.append(sep);
             sql.append(daoColumnField.getName());
             sql.append(" = ?");
-            sql.append(sep);
 
             sep = " AND ";
         }

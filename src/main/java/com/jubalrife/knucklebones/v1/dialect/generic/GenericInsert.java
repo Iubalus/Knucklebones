@@ -102,7 +102,7 @@ public class GenericInsert {
 
     }
 
-    private <Type> String createQuery(DAO<Type> meta) {
+    <Type> String createQuery(DAO<Type> meta) {
         List<DAOColumnField> columns = meta.getColumns();
         StringBuilder sql = new StringBuilder();
         sql.append("INSERT INTO ");
