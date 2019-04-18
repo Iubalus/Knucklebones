@@ -1,6 +1,7 @@
 package com.jubalrife.knucklebones.v1;
 
 import com.jubalrife.knucklebones.v1.exception.KnuckleBonesException;
+import com.jubalrife.knucklebones.v1.query.ParameterizedQuery;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -27,8 +28,7 @@ class NativeQueryImp<QueryResultType> implements Persistence.NativeQuery<QueryRe
     }
 
     public List<QueryResultType> findResults() {
-        ParameterizedQuery parameterizedQuery = ParameterizedQuery.create(sql);
-        parameterizedQuery.setParameters(parameters);
+        ParameterizedQuery parameterizedQuery = ParameterizedQuery.create(sql, parameters);
         DAO<QueryResultType> dao = persistenceContext.getCache().create(type);
 
         PreparedStatementExecutor executor = new PreparedStatementExecutor();

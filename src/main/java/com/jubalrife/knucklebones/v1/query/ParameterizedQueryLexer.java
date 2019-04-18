@@ -1,4 +1,4 @@
-package com.jubalrife.knucklebones.v1;
+package com.jubalrife.knucklebones.v1.query;
 
 import javax.annotation.processing.SupportedSourceVersion;
 

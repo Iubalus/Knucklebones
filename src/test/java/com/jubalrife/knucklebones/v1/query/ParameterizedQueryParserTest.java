@@ -1,5 +1,7 @@
-package com.jubalrife.knucklebones.v1;
+package com.jubalrife.knucklebones.v1.query;
 
+import com.jubalrife.knucklebones.v1.query.ParameterizedQueryLexer;
+import com.jubalrife.knucklebones.v1.query.ParameterizedQueryParser;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.is;

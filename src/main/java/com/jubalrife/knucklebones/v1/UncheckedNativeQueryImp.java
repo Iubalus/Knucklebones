@@ -1,6 +1,7 @@
 package com.jubalrife.knucklebones.v1;
 
 import com.jubalrife.knucklebones.v1.exception.KnuckleBonesException;
+import com.jubalrife.knucklebones.v1.query.ParameterizedQuery;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -28,8 +29,7 @@ class UncheckedNativeQueryImp implements Persistence.UncheckedNativeQuery {
     public int executeUpdate() {
 
         PreparedStatementExecutor executor = new PreparedStatementExecutor();
-        ParameterizedQuery parameterizedQuery = ParameterizedQuery.create(sql);
-        parameterizedQuery.setParameters(parameters);
+        ParameterizedQuery parameterizedQuery = ParameterizedQuery.create(sql, parameters);
         try (PreparedStatement statement = executor.execute(
                 persistenceContext.getConnection(),
                 parameterizedQuery.getQuery(),
@@ -55,8 +55,7 @@ class UncheckedNativeQueryImp implements Persistence.UncheckedNativeQuery {
 
     @SuppressWarnings("unchecked")
     public <DesiredType> List<DesiredType> findResults() {
-        ParameterizedQuery parameterizedQuery = ParameterizedQuery.create(sql);
-        parameterizedQuery.setParameters(parameters);
+        ParameterizedQuery parameterizedQuery = ParameterizedQuery.create(sql, parameters);
         ArrayList<Object> resultList = new ArrayList<>();
 
         PreparedStatementExecutor executor = new PreparedStatementExecutor();

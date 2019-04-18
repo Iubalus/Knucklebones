@@ -1,7 +1,7 @@
-package com.jubalrife.knucklebones.v1;
+package com.jubalrife.knucklebones.v1.query;
 
 
-import com.jubalrife.knucklebones.v1.ParameterizedQueryLexer.ParameterizedQueryToken;
+import com.jubalrife.knucklebones.v1.query.ParameterizedQueryLexer.ParameterizedQueryToken;
 import com.jubalrife.knucklebones.v1.exception.KnuckleBonesException;
 
 import java.util.LinkedList;
