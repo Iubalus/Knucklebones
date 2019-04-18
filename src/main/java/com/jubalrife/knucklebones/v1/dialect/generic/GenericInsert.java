@@ -43,7 +43,7 @@ public class GenericInsert {
             }
 
             if (meta.hasAdditionalGeneratedColumns()) {
-                return new GenericFindSingle().find(context.getConnection(), o, meta, context.getSupportedTypes());
+                return new GenericFindSingle().find(context, o);
             } else {
                 return o;
             }
@@ -81,7 +81,7 @@ public class GenericInsert {
                     }
 
                     if (meta.hasAdditionalGeneratedColumns()) {
-                        new GenericFindSingle().find(context.getConnection(), record, meta, context.getSupportedTypes());
+                        new GenericFindSingle().find(context, record);
                     }
                 }
             }
