@@ -20,12 +20,6 @@ public class KnuckleBonesException extends RuntimeException {
         }
     }
 
-    public static class ParameterNotSet extends KnuckleBonesException {
-        public ParameterNotSet(String parameterName, String rawSql) {
-            super(String.format("Unable to set parameter [%s] in query [%s]", parameterName, rawSql));
-        }
-    }
-
     public static class CouldNotFetchData extends KnuckleBonesException {
         public CouldNotFetchData(Throwable cause) {
             super("Failed to fetch data", cause);
@@ -91,6 +85,18 @@ public class KnuckleBonesException extends RuntimeException {
     public static class ExpectedSingeResult extends KnuckleBonesException {
         public ExpectedSingeResult(int found) {
             super("One recorded expected found " + found);
+        }
+    }
+
+    public static class ParameterNotSet extends KnuckleBonesException {
+        public ParameterNotSet(String parameterName, String rawSql) {
+            super(String.format("Unable to set parameter [%s] in query [%s]", parameterName, rawSql));
+        }
+    }
+
+    public static class ListParameterWasEmpty extends KnuckleBonesException {
+        public ListParameterWasEmpty(String parameterName) {
+            super(String.format("The parameter: [%s] was an empty Collection and could not be expanded.", parameterName));
         }
     }
 }

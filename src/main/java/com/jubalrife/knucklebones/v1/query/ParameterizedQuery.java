@@ -3,6 +3,7 @@ package com.jubalrife.knucklebones.v1.query;
 import com.jubalrife.knucklebones.v1.exception.KnuckleBonesException;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -55,14 +56,28 @@ public class ParameterizedQuery {
             }
 
             Object actualParam = parameters.get(paramName);
-            sqlParameters.add(actualParam);
-            query.append("?");
+            if (actualParam instanceof Collection) {
+                Collection collection = (Collection) actualParam;
+                if (collection.isEmpty()) {
+                    throw new KnuckleBonesException.ListParameterWasEmpty(paramName);
+                }
+
+                sqlParameters.addAll(collection);
+                String sep = "";
+                for (int i = 0; i < collection.size(); i++) {
+                    query.append(sep);
+                    query.append("?");
+                    sep = ",";
+                }
+            } else {
+                sqlParameters.add(actualParam);
+                query.append("?");
+            }
         }
 
         public String getQuery() {
             return query.toString();
         }
-
 
         public ArrayList<Object> getSqlParameters() {
             return sqlParameters;
