@@ -2,18 +2,19 @@ package com.jubalrife.knucklebones.v1.dialect.generic;
 
 import com.jubalrife.knucklebones.v1.DAO;
 import com.jubalrife.knucklebones.v1.DAOColumnField;
+import com.jubalrife.knucklebones.v1.PersistenceContext;
 import com.jubalrife.knucklebones.v1.PreparedStatementExecutor;
-import com.jubalrife.knucklebones.v1.SupportedTypesRegistered;
 import com.jubalrife.knucklebones.v1.exception.KnuckleBonesException;
 
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class GenericUpdate {
-    public <Type> int update(DAO<Type> daoMeta, Object dao, Connection connection, SupportedTypesRegistered supportedTypes) {
+    @SuppressWarnings("unchecked")
+    public <Type> int update(PersistenceContext context, Object dao) {
+        DAO<Type> daoMeta = (DAO<Type>) context.getCache().create(dao.getClass());
         if (daoMeta.getNumberOfIdColumns() == 0)
             throw new KnuckleBonesException.OperationRequiresIdOnAtLeastOneField(daoMeta.getType());
 
@@ -21,17 +22,19 @@ public class GenericUpdate {
 
         PreparedStatementExecutor executor = new PreparedStatementExecutor();
         try (PreparedStatement statement = executor.prepareUpdate(
-                connection,
+                context.getConnection(),
                 query
         )) {
-            executor.setParameters(extractParameters(daoMeta, dao), supportedTypes, statement);
+            executor.setParameters(extractParameters(daoMeta, dao), context.getSupportedTypes(), statement);
             return statement.executeUpdate();
         } catch (SQLException e) {
             throw new KnuckleBonesException.CouldNotUpdateData(e);
         }
     }
 
-    public <Type> int update(DAO<Type> daoMeta, List<Type> dao, Connection connection, SupportedTypesRegistered supportedTypes) {
+    @SuppressWarnings("unchecked")
+    public <Type> int update(PersistenceContext context, List<Type> dao) {
+        DAO<Type> daoMeta = (DAO<Type>) context.getCache().create(dao.getClass());
         if (daoMeta.getNumberOfIdColumns() == 0)
             throw new KnuckleBonesException.OperationRequiresIdOnAtLeastOneField(daoMeta.getType());
 
@@ -39,12 +42,12 @@ public class GenericUpdate {
 
         PreparedStatementExecutor executor = new PreparedStatementExecutor();
         try (PreparedStatement statement = executor.prepareUpdate(
-                connection,
+                context.getConnection(),
                 query
         )) {
             int updated = 0;
             for (Type type : dao) {
-                executor.setParameters(extractParameters(daoMeta, type), supportedTypes, statement);
+                executor.setParameters(extractParameters(daoMeta, type), context.getSupportedTypes(), statement);
                 updated += statement.executeUpdate();
             }
             return updated;

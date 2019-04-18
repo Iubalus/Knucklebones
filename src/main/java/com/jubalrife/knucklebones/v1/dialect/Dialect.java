@@ -1,21 +1,19 @@
 package com.jubalrife.knucklebones.v1.dialect;
 
-import com.jubalrife.knucklebones.v1.DAO;
-import com.jubalrife.knucklebones.v1.SupportedTypesRegistered;
+import com.jubalrife.knucklebones.v1.PersistenceContext;
 
-import java.sql.Connection;
 import java.util.List;
 
 public interface Dialect {
-    <Type> Type insert(Connection connection, DAO<Type> meta, Type object, SupportedTypesRegistered supportedTypes);
+    <Type> Type insert(PersistenceContext context, Type object);
 
-    <Type> void insert(Connection connection, DAO<Type> meta, List<Type> object, SupportedTypesRegistered supportedTypes);
+    <Type> void insert(PersistenceContext context, List<Type> object);
 
-    <Type> Type find(Connection connection, DAO<Type> daoMeta, Type object, SupportedTypesRegistered supportedTypes);
+    <Type> Type find(PersistenceContext context, Type object);
 
-    <Type> int update(Connection connection, DAO<Type> daoMeta, Object object, SupportedTypesRegistered supportedTypes);
+    int update(PersistenceContext context, Object object);
 
-    <Type> int update(Connection connection, DAO<Type> daoMeta, List<Type> object, SupportedTypesRegistered supportedTypes);
+    <Type> int update(PersistenceContext context, List<Type> object);
 
-    <Type> int delete(Connection connection, DAO<Type> daoMeta, Object object, SupportedTypesRegistered supportedTypes);
+    int delete(PersistenceContext context, Object object);
 }

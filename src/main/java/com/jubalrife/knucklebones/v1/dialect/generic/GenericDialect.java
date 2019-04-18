@@ -1,40 +1,44 @@
 package com.jubalrife.knucklebones.v1.dialect.generic;
 
-import com.jubalrife.knucklebones.v1.DAO;
-import com.jubalrife.knucklebones.v1.SupportedTypesRegistered;
+import com.jubalrife.knucklebones.v1.PersistenceContext;
 import com.jubalrife.knucklebones.v1.dialect.Dialect;
 
-import java.sql.Connection;
 import java.util.List;
 
 public class GenericDialect implements Dialect {
     @Override
-    public <Type> Type insert(Connection connection, DAO<Type> meta, Type object, SupportedTypesRegistered supportedTypes) {
-        return new GenericInsert().insert(meta, object, connection, supportedTypes);
+    @SuppressWarnings("unchecked")
+    public <Type> Type insert(PersistenceContext context, Type object) {
+        return new GenericInsert().insert(context, object);
     }
 
     @Override
-    public <Type> void insert(Connection connection, DAO<Type> meta, List<Type> object, SupportedTypesRegistered supportedTypes) {
-        new GenericInsert().insert(meta, object, connection, supportedTypes);
+    @SuppressWarnings("unchecked")
+    public <Type> void insert(PersistenceContext context, List<Type> object) {
+        new GenericInsert().insert(context, object);
     }
 
     @Override
-    public <Type> Type find(Connection connection, DAO<Type> daoMeta, Type object, SupportedTypesRegistered supportedTypes) {
-        return new GenericFindSingle().find(connection, object, daoMeta, supportedTypes);
+    @SuppressWarnings("unchecked")
+    public <Type> Type find(PersistenceContext context, Type object) {
+        return new GenericFindSingle().find(context, object);
     }
 
     @Override
-    public <Type> int update(Connection connection, DAO<Type> daoMeta, Object o, SupportedTypesRegistered supportedTypes) {
-        return new GenericUpdate().update(daoMeta, o, connection, supportedTypes);
+    @SuppressWarnings("unchecked")
+    public int update(PersistenceContext context, Object o) {
+        return new GenericUpdate().update(context, o);
     }
 
     @Override
-    public <Type> int update(Connection connection, DAO<Type> daoMeta, List<Type> object, SupportedTypesRegistered supportedTypes) {
-        return new GenericUpdate().update(daoMeta, object, connection, supportedTypes);
+    @SuppressWarnings("unchecked")
+    public <Type> int update(PersistenceContext context, List<Type> toUpdate) {
+        return new GenericUpdate().update(context, toUpdate);
     }
 
     @Override
-    public <Type> int delete(Connection connection, DAO<Type> daoMeta, Object o, SupportedTypesRegistered supportedTypes) {
-        return new GenericDelete().delete(connection, daoMeta, o, supportedTypes);
+    @SuppressWarnings("unchecked")
+    public int delete(PersistenceContext context, Object o) {
+        return new GenericDelete().delete(context, o);
     }
 }

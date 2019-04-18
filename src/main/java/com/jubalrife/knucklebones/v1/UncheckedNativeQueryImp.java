@@ -2,7 +2,6 @@ package com.jubalrife.knucklebones.v1;
 
 import com.jubalrife.knucklebones.v1.exception.KnuckleBonesException;
 
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -11,16 +10,14 @@ import java.util.HashMap;
 import java.util.List;
 
 class UncheckedNativeQueryImp implements Persistence.UncheckedNativeQuery {
-    private final Connection connection;
-    private final SupportedTypesRegistered supportedTypes;
-    private final ParameterizedQuery parameterizedQuery;
+    private final PersistenceContext persistenceContext;
     private final HashMap<String, Object> parameters = new HashMap<>();
+    private final String sql;
 
 
-    UncheckedNativeQueryImp(Connection connection, SupportedTypesRegistered supportedTypes, String query) {
-        this.connection = connection;
-        this.supportedTypes = supportedTypes;
-        this.parameterizedQuery = ParameterizedQuery.create(query);
+    UncheckedNativeQueryImp(PersistenceContext persistenceContext, String sql) {
+        this.persistenceContext = persistenceContext;
+        this.sql = sql;
     }
 
     public UncheckedNativeQueryImp setParameter(String key, Object value) {
@@ -29,13 +26,15 @@ class UncheckedNativeQueryImp implements Persistence.UncheckedNativeQuery {
     }
 
     public int executeUpdate() {
+
         PreparedStatementExecutor executor = new PreparedStatementExecutor();
+        ParameterizedQuery parameterizedQuery = ParameterizedQuery.create(sql);
         parameterizedQuery.setParameters(parameters);
         try (PreparedStatement statement = executor.execute(
-                connection,
+                persistenceContext.getConnection(),
                 parameterizedQuery.getQuery(),
                 parameterizedQuery.getParameters(),
-                supportedTypes
+                persistenceContext.getSupportedTypes()
         )) {
             return statement.executeUpdate();
         } catch (SQLException e) {
@@ -56,15 +55,16 @@ class UncheckedNativeQueryImp implements Persistence.UncheckedNativeQuery {
 
     @SuppressWarnings("unchecked")
     public <DesiredType> List<DesiredType> findResults() {
+        ParameterizedQuery parameterizedQuery = ParameterizedQuery.create(sql);
         parameterizedQuery.setParameters(parameters);
         ArrayList<Object> resultList = new ArrayList<>();
 
         PreparedStatementExecutor executor = new PreparedStatementExecutor();
         try (PreparedStatement statement = executor.execute(
-                connection,
+                persistenceContext.getConnection(),
                 parameterizedQuery.getQuery(),
                 parameterizedQuery.getParameters(),
-                supportedTypes
+                persistenceContext.getSupportedTypes()
         )) {
             try (ResultSet result = statement.executeQuery()) {
                 int columnCount = result.getMetaData().getColumnCount();

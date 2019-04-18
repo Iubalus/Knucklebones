@@ -43,7 +43,7 @@ public class PersistenceFactory {
      */
     public Persistence create() {
         try {
-            return new Persistence(dataSource.getConnection(), dialect, factory);
+            return new Persistence(new PersistenceContext(dataSource.getConnection(), dialect, new SupportedTypesRegistered(), factory));
         } catch (SQLException e) {
             throw new KnuckleBonesException.CouldNotCreateConnection(e);
         }

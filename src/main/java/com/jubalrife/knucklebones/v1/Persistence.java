@@ -1,6 +1,5 @@
 package com.jubalrife.knucklebones.v1;
 
-import com.jubalrife.knucklebones.v1.dialect.Dialect;
 import com.jubalrife.knucklebones.v1.exception.KnuckleBonesException;
 
 import java.sql.Connection;
@@ -11,16 +10,10 @@ import java.util.List;
  * Created by calling {@link PersistenceFactory#create()}.
  */
 public class Persistence implements AutoCloseable {
-    private Connection connection;
-    private Dialect dialect;
-    private SupportedTypesRegistered supportedTypes;
-    private DAOFactory cache;
+    private final PersistenceContext persistenceContext;
 
-    Persistence(Connection connection, Dialect dialect, DAOFactory cache) {
-        this.connection = connection;
-        this.dialect = dialect;
-        this.cache = cache;
-        supportedTypes = new SupportedTypesRegistered();
+    public Persistence(PersistenceContext persistenceContext) {
+        this.persistenceContext = persistenceContext;
     }
 
     /**
@@ -33,7 +26,7 @@ public class Persistence implements AutoCloseable {
      */
     @SuppressWarnings("unchecked")
     public <ResultType> ResultType find(ResultType record) {
-        return dialect.find(connection, cache.create((Class<ResultType>) record.getClass()), record, supportedTypes);
+        return persistenceContext.getDialect().find(persistenceContext, record);
     }
 
     /**
@@ -45,14 +38,17 @@ public class Persistence implements AutoCloseable {
      */
     @SuppressWarnings("unchecked")
     public <ResultType> ResultType insert(ResultType record) {
-        return dialect.insert(connection, cache.create((Class<ResultType>) record.getClass()), record, supportedTypes);
+        return persistenceContext.getDialect().insert(
+                persistenceContext,
+                record
+        );
     }
 
     @SuppressWarnings("unchecked")
     public <ResultType> void insert(List<ResultType> o) {
         if (o.isEmpty()) return;
 
-        dialect.insert(connection, cache.create((Class<ResultType>) o.get(0).getClass()), o, supportedTypes);
+        persistenceContext.getDialect().insert(persistenceContext, o);
     }
 
     /**
@@ -64,14 +60,13 @@ public class Persistence implements AutoCloseable {
      * @return the number of rows modified
      */
     public int update(Object record) {
-        return dialect.update(connection, cache.create(record.getClass()), record, supportedTypes);
+        return persistenceContext.getDialect().update(persistenceContext, record);
     }
 
     @SuppressWarnings("unchecked")
     public <Type> int update(List<Type> o) {
         if (o.isEmpty()) return 0;
-        DAO<Type> daoMeta = (DAO<Type>) cache.create(o.get(0).getClass());
-        return dialect.update(connection, daoMeta, o, supportedTypes);
+        return persistenceContext.getDialect().update(persistenceContext, o);
     }
 
     /**
@@ -82,7 +77,7 @@ public class Persistence implements AutoCloseable {
      * @return the number of entries deleted.
      */
     public int delete(Object record) {
-        return dialect.delete(connection, cache.create(record.getClass()), record, supportedTypes);
+        return persistenceContext.getDialect().delete(persistenceContext, record);
     }
 
     /**
@@ -96,7 +91,7 @@ public class Persistence implements AutoCloseable {
      * @return a Native query to set parameters and retrieve results.
      */
     public <ResultType> NativeQuery<ResultType> createNativeQuery(String query, Class<ResultType> type) {
-        return new NativeQueryImp<>(connection, supportedTypes, cache, type, query);
+        return new NativeQueryImp<>(persistenceContext, type, query);
     }
 
     /**
@@ -108,18 +103,18 @@ public class Persistence implements AutoCloseable {
      * @return a new {@link UncheckedNativeQuery}
      */
     public UncheckedNativeQueryImp createNativeQuery(String query) {
-        return new UncheckedNativeQueryImp(connection, supportedTypes, query);
+        return new UncheckedNativeQueryImp(persistenceContext, query);
     }
 
     /**
      * @return the {@link SupportedTypes} for this persistence.
      */
     public SupportedTypes getSupportedTypes() {
-        return supportedTypes;
+        return persistenceContext.getSupportedTypes();
     }
 
     SupportedTypesRegistered getSupportedTypesRegistered() {
-        return supportedTypes;
+        return persistenceContext.getSupportedTypes();
     }
 
     /**
@@ -128,7 +123,7 @@ public class Persistence implements AutoCloseable {
      * @return the underlying {@link Connection}
      */
     public Connection getConnection() {
-        return connection;
+        return persistenceContext.getConnection();
     }
 
     /**
@@ -138,7 +133,7 @@ public class Persistence implements AutoCloseable {
      */
     public void begin() {
         try {
-            connection.setAutoCommit(false);
+            persistenceContext.getConnection().setAutoCommit(false);
         } catch (SQLException e) {
             throw new KnuckleBonesException.CouldNotCreateATransaction(e);
         }
@@ -151,7 +146,7 @@ public class Persistence implements AutoCloseable {
      */
     public void rollback() {
         try {
-            connection.rollback();
+            persistenceContext.getConnection().rollback();
         } catch (SQLException e) {
             throw new KnuckleBonesException.CouldNotRollbackATransaction(e);
         }
@@ -163,7 +158,7 @@ public class Persistence implements AutoCloseable {
      */
     public void commit() {
         try {
-            connection.commit();
+            persistenceContext.getConnection().commit();
         } catch (SQLException e) {
             throw new KnuckleBonesException.CouldNotCommitATransaction(e);
         }
@@ -174,7 +169,7 @@ public class Persistence implements AutoCloseable {
      */
     public void close() {
         try {
-            connection.close();
+            persistenceContext.getConnection().close();
         } catch (SQLException e) {
             throw new KnuckleBonesException("Unable to close connection.", e);
         }

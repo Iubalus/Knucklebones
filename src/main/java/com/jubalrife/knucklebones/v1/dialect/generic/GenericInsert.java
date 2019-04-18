@@ -11,14 +11,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GenericInsert {
-    public <Type> Type insert(DAO<Type> meta, Type o, Connection connection, SupportedTypesRegistered supportedTypes) {
+    @SuppressWarnings("unchecked")
+    public <Type> Type insert(PersistenceContext context, Type o) {
+        DAO<Type> meta = (DAO<Type>) context.getCache().create(o.getClass());
         String query = createQuery(meta);
         PreparedStatementExecutor executor = new PreparedStatementExecutor();
         try (PreparedStatement statement = executor.execute(
-                connection,
+                context.getConnection(),
                 query,
                 extractParameters(meta, o),
-                supportedTypes
+                context.getSupportedTypes()
         )) {
             statement.executeUpdate();
 
@@ -29,7 +31,7 @@ public class GenericInsert {
 
             ResultSet keys = statement.getGeneratedKeys();
             if (keys.next()) {
-                Object generatedValue = supportedTypes
+                Object generatedValue = context.getSupportedTypes()
                         .getExtractor(keys.getMetaData().getColumnType(1), generatedKey.getField().getType())
                         .extract(1, keys);
 
@@ -41,7 +43,7 @@ public class GenericInsert {
             }
 
             if (meta.hasAdditionalGeneratedColumns()) {
-                return new GenericFindSingle().find(connection, o, meta, supportedTypes);
+                return new GenericFindSingle().find(context.getConnection(), o, meta, context.getSupportedTypes());
             } else {
                 return o;
             }
@@ -50,22 +52,24 @@ public class GenericInsert {
         }
     }
 
-    public <Type> void insert(DAO<Type> meta, List<Type> insertList, Connection connection, SupportedTypesRegistered supportedTypes) {
+    @SuppressWarnings("unchecked")
+    public <Type> void insert(PersistenceContext context, List<Type> insertList) {
+        DAO<Type> meta = (DAO<Type>) context.getCache().create(insertList.get(0).getClass());
         String query = createQuery(meta);
         PreparedStatementExecutor executor = new PreparedStatementExecutor();
         try (PreparedStatement statement = executor.prepareInsert(
-                connection,
+                context.getConnection(),
                 query
         )) {
             for (Type record : insertList) {
-                executor.setParameters(extractParameters(meta, record), supportedTypes, statement);
+                executor.setParameters(extractParameters(meta, record), context.getSupportedTypes(), statement);
                 statement.executeUpdate();
                 ResultSet keys = statement.getGeneratedKeys();
                 DAOColumnField generatedKey = meta.getGeneratedId();
                 if (generatedKey == null) continue;
 
                 if (keys.next()) {
-                    Object generatedValue = supportedTypes
+                    Object generatedValue = context.getSupportedTypes()
                             .getExtractor(keys.getMetaData().getColumnType(1), generatedKey.getField().getType())
                             .extract(1, keys);
 
@@ -77,7 +81,7 @@ public class GenericInsert {
                     }
 
                     if (meta.hasAdditionalGeneratedColumns()) {
-                        new GenericFindSingle().find(connection, record, meta, supportedTypes);
+                        new GenericFindSingle().find(context.getConnection(), record, meta, context.getSupportedTypes());
                     }
                 }
             }
