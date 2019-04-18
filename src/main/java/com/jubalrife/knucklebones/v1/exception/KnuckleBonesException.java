@@ -20,6 +20,12 @@ public class KnuckleBonesException extends RuntimeException {
         }
     }
 
+    public static class ParameterNotSet extends KnuckleBonesException {
+        public ParameterNotSet(String parameterName, String rawSql) {
+            super(String.format("Unable to set parameter [%s] in query [%s]", parameterName, rawSql));
+        }
+    }
+
     public static class CouldNotFetchData extends KnuckleBonesException {
         public CouldNotFetchData(Throwable cause) {
             super("Failed to fetch data", cause);
@@ -76,13 +82,13 @@ public class KnuckleBonesException extends RuntimeException {
         }
     }
 
-    public static class UnableToMapNullIntoAPrimitiveValue extends KnuckleBonesException{
-        public UnableToMapNullIntoAPrimitiveValue(int columnIndex){
+    public static class UnableToMapNullIntoAPrimitiveValue extends KnuckleBonesException {
+        public UnableToMapNullIntoAPrimitiveValue(int columnIndex) {
             super("Unable to map a null value into a primitive type. Null value was retrieved from column " + columnIndex);
         }
     }
 
-    public static class ExpectedSingeResult extends KnuckleBonesException{
+    public static class ExpectedSingeResult extends KnuckleBonesException {
         public ExpectedSingeResult(int found) {
             super("One recorded expected found " + found);
         }

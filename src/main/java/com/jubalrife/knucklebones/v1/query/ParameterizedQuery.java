@@ -1,14 +1,16 @@
 package com.jubalrife.knucklebones.v1.query;
 
+import com.jubalrife.knucklebones.v1.exception.KnuckleBonesException;
+
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ParameterizedQuery {
     private final String query;
     private final List<Object> parameters;
 
-    public ParameterizedQuery(String query, List<Object> parameters) {
+    private ParameterizedQuery(String query, List<Object> parameters) {
         this.query = query;
         this.parameters = parameters;
     }
@@ -21,20 +23,24 @@ public class ParameterizedQuery {
         return query;
     }
 
-    public static ParameterizedQuery create(String text, HashMap<String, Object> parameters) {
-        QuestionMarkQueryBuilder listener = new QuestionMarkQueryBuilder(parameters);
+    public static ParameterizedQuery create(String query, Map<String, Object> parameters) {
+        QuestionMarkQueryBuilder listener = new QuestionMarkQueryBuilder(query, parameters);
 
-        new ParameterizedQueryParser(new ParameterizedQueryLexer(text), listener).parse();
+        new ParameterizedQueryParser(new ParameterizedQueryLexer(query), listener).parse();
 
         return new ParameterizedQuery(listener.getQuery(), listener.getSqlParameters());
     }
 
     private static class QuestionMarkQueryBuilder implements ParameterizedQueryParser.Listener {
-        StringBuilder query = new StringBuilder();
-        private final HashMap<String, Object> parameters;
+        private final StringBuilder query = new StringBuilder();
+        private final String text;
+        private final Map<String, Object> parameters;
         private final ArrayList<Object> sqlParameters = new ArrayList<>();
 
-        private QuestionMarkQueryBuilder(HashMap<String, Object> parameters) {this.parameters = parameters;}
+        private QuestionMarkQueryBuilder(String raw, Map<String, Object> parameters) {
+            this.text = raw;
+            this.parameters = parameters;
+        }
 
         @Override
         public void text(ParameterizedQueryLexer.ParameterizedQueryToken token) {
@@ -44,6 +50,10 @@ public class ParameterizedQuery {
         @Override
         public void parameter(ParameterizedQueryLexer.ParameterizedQueryToken colon, ParameterizedQueryLexer.ParameterizedQueryToken name) {
             String paramName = name.getText();
+            if (!parameters.containsKey(paramName)) {
+                throw new KnuckleBonesException.ParameterNotSet(paramName, text);
+            }
+
             Object actualParam = parameters.get(paramName);
             sqlParameters.add(actualParam);
             query.append("?");
