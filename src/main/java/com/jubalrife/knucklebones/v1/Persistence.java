@@ -4,11 +4,7 @@ import com.jubalrife.knucklebones.v1.dialect.Dialect;
 import com.jubalrife.knucklebones.v1.exception.KnuckleBonesException;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -27,14 +23,29 @@ public class Persistence implements AutoCloseable {
         supportedTypes = new SupportedTypesRegistered();
     }
 
+    /**
+     * Attempt to perform a SQL SELECT statement for the record specified.
+     * The record will be found by the fields annotated with {@link com.jubalrife.knucklebones.v1.annotation.Id}.
+     *
+     * @param record       to find
+     * @param <ResultType> the type of the record to find
+     * @return The record found.
+     */
     @SuppressWarnings("unchecked")
-    public <ResultType> ResultType find(ResultType item) {
-        return dialect.find(connection, cache.create((Class<ResultType>) item.getClass()), item, supportedTypes);
+    public <ResultType> ResultType find(ResultType record) {
+        return dialect.find(connection, cache.create((Class<ResultType>) record.getClass()), record, supportedTypes);
     }
 
+    /**
+     * Attempt to perform a SQL INSERT statement for the record provided.
+     *
+     * @param record       to insert
+     * @param <ResultType> type of the record to insert.
+     * @return the record inserted with its generated key.
+     */
     @SuppressWarnings("unchecked")
-    public <ResultType> ResultType insert(ResultType o) {
-        return dialect.insert(connection, cache.create((Class<ResultType>) o.getClass()), o, supportedTypes);
+    public <ResultType> ResultType insert(ResultType record) {
+        return dialect.insert(connection, cache.create((Class<ResultType>) record.getClass()), record, supportedTypes);
     }
 
     @SuppressWarnings("unchecked")
@@ -44,8 +55,16 @@ public class Persistence implements AutoCloseable {
         dialect.insert(connection, cache.create((Class<ResultType>) o.get(0).getClass()), o, supportedTypes);
     }
 
-    public int update(Object o) {
-        return dialect.update(connection, cache.create(o.getClass()), o, supportedTypes);
+    /**
+     * Attempt to perform a SQL UPDATE statement using fields annotated with {@link com.jubalrife.knucklebones.v1.annotation.Id}
+     * in the where clause to specify the record to update. Fields annotated with {@link com.jubalrife.knucklebones.v1.annotation.Id}
+     * will not be updated.
+     *
+     * @param record to update
+     * @return the number of rows modified
+     */
+    public int update(Object record) {
+        return dialect.update(connection, cache.create(record.getClass()), record, supportedTypes);
     }
 
     @SuppressWarnings("unchecked")
@@ -55,24 +74,41 @@ public class Persistence implements AutoCloseable {
         return dialect.update(connection, daoMeta, o, supportedTypes);
     }
 
-    public int delete(Object o) {
-        return dialect.delete(connection, cache.create(o.getClass()), o, supportedTypes);
-    }
-
-    public <ResultType> NativeQuery<ResultType> createNativeQuery(String query, Class<ResultType> type) {
-        return new NativeQuery<>(type, query);
+    /**
+     * Attempt to perform a sql DELETE Statement using fields annotated with {@link com.jubalrife.knucklebones.v1.annotation.Id}
+     * in the where clause to specify the record to delete.
+     *
+     * @param record to delete
+     * @return the number of entries deleted.
+     */
+    public int delete(Object record) {
+        return dialect.delete(connection, cache.create(record.getClass()), record, supportedTypes);
     }
 
     /**
      * Creating a native query will require a sql expression that can contain colon parameters.
-     * Parameters in the string will need to be populates with {@link UncheckedNativeQuery#setParameter(String, Object)}
-     * using colon parameters will sanitize the provided value.
+     * Parameters in the string will need to be populates with {@link NativeQuery#setParameter(String, Object)}.
+     * Using colon parameters will sanitize the provided value.
+     *
+     * @param query        the sq1 to be run. May contain colon parameters
+     * @param type         the class of the expected result(s)
+     * @param <ResultType> the type of the expected result(s)
+     * @return a Native query to set parameters and retrieve results.
+     */
+    public <ResultType> NativeQuery<ResultType> createNativeQuery(String query, Class<ResultType> type) {
+        return new NativeQueryImp<>(connection, supportedTypes, cache, type, query);
+    }
+
+    /**
+     * Creating a native query will require a sql expression that can contain colon parameters.
+     * Parameters in the string will need to be populates with {@link UncheckedNativeQuery#setParameter(String, Object)}.
+     * Using colon parameters will sanitize the provided value.
      *
      * @param query a string containing colon parameters.
      * @return a new {@link UncheckedNativeQuery}
      */
-    public UncheckedNativeQuery createNativeQuery(String query) {
-        return new UncheckedNativeQuery(query);
+    public UncheckedNativeQueryImp createNativeQuery(String query) {
+        return new UncheckedNativeQueryImp(connection, supportedTypes, query);
     }
 
     /**
@@ -144,53 +180,35 @@ public class Persistence implements AutoCloseable {
         }
     }
 
-    public class NativeQuery<QueryResultType> {
-        private Class<QueryResultType> type;
-        private final ParameterizedQuery parameterizedQuery;
-        private final HashMap<String, Object> parameters = new HashMap<>();
-
-        NativeQuery(Class<QueryResultType> type, String sql) {
-            this.type = type;
-            parameterizedQuery = ParameterizedQuery.create(sql);
-        }
-
+    /**
+     * A Native Query allows a user to get results form a sql query.
+     * It will perform parameter sanitation on any colon parameters that are set using
+     * {@link NativeQuery#setParameter}.
+     * <p>
+     * Results can be retrieved by either {@link NativeQuery#findSingleResult()} or
+     * {@link NativeQuery#findResults()}
+     */
+    public interface NativeQuery<ResultType> {
         /**
          * @param key   the name of the colon parameter in the query to replace
          * @param value the value to use when running the query
          * @return this to allow for chaining.
          */
-        public NativeQuery<QueryResultType> setParameter(String key, Object value) {
-            this.parameters.put(key, value);
-            return this;
-        }
+        NativeQuery<ResultType> setParameter(String key, Object value);
 
-        public List<QueryResultType> findResults() {
-            parameterizedQuery.setParameters(parameters);
-            DAO<QueryResultType> dao = cache.create(type);
+        /**
+         * Executes the query with the provided parameters.
+         *
+         * @return the first row in the result after running the query with the provided parameters.
+         */
+        List<ResultType> findResults();
 
-            PreparedStatementExecutor executor = new PreparedStatementExecutor();
-            try (PreparedStatement statement = executor.execute(
-                    connection,
-                    parameterizedQuery.getQuery(),
-                    parameterizedQuery.getParameters(),
-                    supportedTypes
-            )) {
-                try (ResultSet result = statement.executeQuery()) {
-                    return dao.fillFromResultSet(result, supportedTypes);
-                }
-            } catch (SQLException e) {
-                throw new KnuckleBonesException.CouldNotFetchData(e);
-            }
-        }
-
-        public QueryResultType findSingleResult() {
-            List<QueryResultType> results = findResults();
-            if (results.size() != 1) {
-                throw new KnuckleBonesException.ExpectedSingeResult(results.size());
-            }
-            return results.get(0);
-        }
-
+        /**
+         * Executes the query with the provided parameters.
+         *
+         * @return the rows in the result after running the query with the provided parameters.
+         */
+        ResultType findSingleResult();
     }
 
     /**
@@ -201,44 +219,20 @@ public class Persistence implements AutoCloseable {
      * Results can be retrieved by either {@link UncheckedNativeQuery#findSingleResult()} or
      * {@link UncheckedNativeQuery#findResults()}
      */
-    public class UncheckedNativeQuery {
-        private final ParameterizedQuery parameterizedQuery;
-        private final HashMap<String, Object> parameters = new HashMap<>();
-
-        private UncheckedNativeQuery(String query) {
-            this.parameterizedQuery = ParameterizedQuery.create(query);
-        }
-
+    public interface UncheckedNativeQuery {
         /**
          * @param key   the name of the colon parameter in the query to replace
          * @param value the value to use when running the query
          * @return this to allow for chaining.
          */
-        public UncheckedNativeQuery setParameter(String key, Object value) {
-            this.parameters.put(key, value);
-            return this;
-        }
+        UncheckedNativeQueryImp setParameter(String key, Object value);
 
         /**
          * Executes the statement as an update. The number of rows modified will be returned.
          *
          * @return the number of rows modified in the update statement.
          */
-        public int executeUpdate() {
-            PreparedStatementExecutor executor = new PreparedStatementExecutor();
-            parameterizedQuery.setParameters(parameters);
-            try (PreparedStatement statement = executor.execute(
-                    connection,
-                    parameterizedQuery.getQuery(),
-                    parameterizedQuery.getParameters(),
-                    supportedTypes
-            )) {
-                return statement.executeUpdate();
-            } catch (SQLException e) {
-                throw new KnuckleBonesException.CouldNotUpdateData(e);
-            }
-        }
-
+        int executeUpdate();
 
         /**
          * Executes the query with the provided parameters expecting exactly one result to be returned.
@@ -247,53 +241,15 @@ public class Persistence implements AutoCloseable {
          *                      or if the result has only one column the expected type of that column.
          * @return the first row in the result after running the query with the provided parameters.
          */
-        public <DesiredType> DesiredType findSingleResult() {
-            List<DesiredType> results = findResults();
-
-            if (results.size() != 1) {
-                throw new KnuckleBonesException.ExpectedSingeResult(results.size());
-            }
-
-            return results.get(0);
-        }
+        <DesiredType> DesiredType findSingleResult();
 
         /**
          * Executes the query with the provided parameters.
          *
          * @param <DesiredType> the expected type should be either a List of Object[] if more than one column is specified in the result
          *                      or if the result has only one column a List of the expected type of that column.
-         * @return the first row in the result after running the query with the provided parameters.
+         * @return the rows in the result after running the query with the provided parameters.
          */
-        @SuppressWarnings("unchecked")
-        public <DesiredType> List<DesiredType> findResults() {
-            parameterizedQuery.setParameters(parameters);
-            ArrayList<Object> resultList = new ArrayList<>();
-
-            PreparedStatementExecutor executor = new PreparedStatementExecutor();
-            try (PreparedStatement statement = executor.execute(
-                    connection,
-                    parameterizedQuery.getQuery(),
-                    parameterizedQuery.getParameters(),
-                    supportedTypes
-            )) {
-                try (ResultSet result = statement.executeQuery()) {
-                    int columnCount = result.getMetaData().getColumnCount();
-                    while (result.next()) {
-                        if (columnCount > 1) {
-                            Object[] resultRow = new Object[columnCount];
-                            for (int i = 0; i < columnCount; i++) {
-                                resultRow[i] = result.getObject(i + 1);
-                            }
-                            resultList.add(resultRow);
-                        } else {
-                            resultList.add(result.getObject(1));
-                        }
-                    }
-                }
-            } catch (SQLException e) {
-                throw new KnuckleBonesException.CouldNotFetchData(e);
-            }
-            return (List<DesiredType>) resultList;
-        }
+        <DesiredType> List<DesiredType> findResults();
     }
 }
