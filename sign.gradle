@@ -41,7 +41,7 @@ publishing {
             customizePom(pom)
             groupId 'com.jubalrife'
             artifactId 'knucklebones'
-            version '1.0.3'
+            version '1.0.4'
 
             from components.java
 
