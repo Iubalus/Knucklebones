@@ -102,7 +102,7 @@ public class Persistence implements AutoCloseable {
      * @param query a string containing colon parameters.
      * @return a new {@link UncheckedNativeQuery}
      */
-    public UncheckedNativeQueryImp createNativeQuery(String query) {
+    public UncheckedNativeQuery createNativeQuery(String query) {
         return new UncheckedNativeQueryImp(persistenceContext, query);
     }
 
