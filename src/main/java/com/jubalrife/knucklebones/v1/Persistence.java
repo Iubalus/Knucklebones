@@ -220,7 +220,7 @@ public class Persistence implements AutoCloseable {
          * @param value the value to use when running the query
          * @return this to allow for chaining.
          */
-        UncheckedNativeQueryImp setParameter(String key, Object value);
+        UncheckedNativeQuery setParameter(String key, Object value);
 
         /**
          * Executes the statement as an update. The number of rows modified will be returned.
