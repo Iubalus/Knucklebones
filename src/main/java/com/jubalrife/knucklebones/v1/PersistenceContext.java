@@ -3,6 +3,7 @@ package com.jubalrife.knucklebones.v1;
 import com.jubalrife.knucklebones.v1.dialect.Dialect;
 
 import java.sql.Connection;
+import java.util.List;
 
 public class PersistenceContext {
     private final Connection connection;
@@ -10,7 +11,7 @@ public class PersistenceContext {
     private final SupportedTypesRegistered supportedTypes;
     private final DAOFactory cache;
 
-    public PersistenceContext(Connection connection, Dialect dialect, SupportedTypesRegistered supportedTypes, DAOFactory cache) {
+    PersistenceContext(Connection connection, Dialect dialect, SupportedTypesRegistered supportedTypes, DAOFactory cache) {
         this.connection = connection;
         this.dialect = dialect;
         this.supportedTypes = supportedTypes;
@@ -21,8 +22,28 @@ public class PersistenceContext {
         return connection;
     }
 
-    public Dialect getDialect() {
-        return dialect;
+    Object find(Object record) {
+        return dialect.find(this, record);
+    }
+
+    Object insert(Object record) {
+        return dialect.insert(this, record);
+    }
+
+    void insert(List<Object> record) {
+        dialect.insert(this, record);
+    }
+
+    int update(Object record) {
+        return dialect.update(this, record);
+    }
+
+    int update(List<Object> record) {
+        return dialect.update(this, record);
+    }
+
+    int delete(Object record) {
+        return dialect.delete(this, record);
     }
 
     public SupportedTypesRegistered getSupportedTypes() {

@@ -12,7 +12,7 @@ import java.util.List;
 public class Persistence implements AutoCloseable {
     private final PersistenceContext persistenceContext;
 
-    public Persistence(PersistenceContext persistenceContext) {
+    Persistence(PersistenceContext persistenceContext) {
         this.persistenceContext = persistenceContext;
     }
 
@@ -26,7 +26,7 @@ public class Persistence implements AutoCloseable {
      */
     @SuppressWarnings("unchecked")
     public <ResultType> ResultType find(ResultType record) {
-        return persistenceContext.getDialect().find(persistenceContext, record);
+        return (ResultType) persistenceContext.find(record);
     }
 
     /**
@@ -38,17 +38,14 @@ public class Persistence implements AutoCloseable {
      */
     @SuppressWarnings("unchecked")
     public <ResultType> ResultType insert(ResultType record) {
-        return persistenceContext.getDialect().insert(
-                persistenceContext,
-                record
-        );
+        return (ResultType) persistenceContext.insert(record);
     }
 
     @SuppressWarnings("unchecked")
     public <ResultType> void insert(List<ResultType> o) {
         if (o.isEmpty()) return;
 
-        persistenceContext.getDialect().insert(persistenceContext, o);
+        persistenceContext.insert((List<Object>) o);
     }
 
     /**
@@ -60,13 +57,13 @@ public class Persistence implements AutoCloseable {
      * @return the number of rows modified
      */
     public int update(Object record) {
-        return persistenceContext.getDialect().update(persistenceContext, record);
+        return persistenceContext.update(record);
     }
 
     @SuppressWarnings("unchecked")
     public <Type> int update(List<Type> o) {
         if (o.isEmpty()) return 0;
-        return persistenceContext.getDialect().update(persistenceContext, o);
+        return persistenceContext.update((List<Object>) o);
     }
 
     /**
@@ -77,7 +74,7 @@ public class Persistence implements AutoCloseable {
      * @return the number of entries deleted.
      */
     public int delete(Object record) {
-        return persistenceContext.getDialect().delete(persistenceContext, record);
+        return persistenceContext.delete(record);
     }
 
     /**

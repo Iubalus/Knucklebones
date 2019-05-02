@@ -7,6 +7,9 @@ import com.jubalrife.knucklebones.v1.exception.KnuckleBonesException;
 import javax.sql.DataSource;
 import java.sql.SQLException;
 
+/**
+ * Factory used to construct {@link Persistence}.
+ */
 public class PersistenceFactory {
     private final DataSource dataSource;
     private final Dialect dialect;
