@@ -49,7 +49,7 @@ public static class RowOfT {
 ```
 If id was a generated value,
 ```java
-@Table(name="t")
+@Table(name = "t")
 public static class RowOfT {
   @Id
   @GeneratedValue
@@ -129,7 +129,3 @@ try (Persistence p = factory.createPersistence()) {
   System.out.println(found.email);
 }
 ```
-
-
-
-
