@@ -22,13 +22,13 @@ Knucklebones can also be downloaded directly from Github as Source, compiled, an
 The first step for using Knucklebones is to determine a javax.sql.DataSource that will connect to the database.
 For the purpose of this example, the [H2 Datasource](http://www.h2database.com/html/features.html) will be used (to allow for a local file or in-memory database)
 Once a datasource has been determined, create an instance of the Knucklebones PersistenceFactory passing in the datasource
-```
+```java
 DataSource ds = JdbcConnectionPool.create("jdbc:h2:databaseFileName", "aUsername", "aSecurePassword");
 PersistenceFactory factory = new PersistenceFactory(ds);
 ```
 Now that a persistence factory has been created, a Persistence can be created from the factory
-```
-try(Persistence persistence = factory.create()){
+```java
+try (Persistence persistence = factory.create()) {
   //do work with persistence here
 }
 ```
@@ -40,37 +40,37 @@ _Please note that Persistence is an AutoCloseable and should be closed to preven
 Knucklebones uses field access to fill structs and write data from structs into the database.
 
 Suppose there is a table t that looks like t(_id_) a struct for this table would look as follows
-```
-@Table(name="t")
-public static class RowOfT{
+```java
+@Table(name = "t")
+public static class RowOfT {
   @Id
   public Integer id;
 }
 ```
 If id was a generated value,
-```
+```java
 @Table(name="t")
-public static class RowOfT{
+public static class RowOfT {
   @Id
   @GeneratedValue
   public Integer id;
 }
 ```
 If another name is preferable in the java code
-```
-@Table(name="t")
-public static class RowOfT{
+```java
+@Table(name = "t")
+public static class RowOfT {
   @Id
   @GeneratedValue
-  @Column(name="id")
+  @Column(name = "id")
   public Integer anotherName;
 }
 ```
 This is the basic structure, from here more complex objects can be built.
 to represent a table that looks like email(_emailId_,emaile,verified) the structure may look like
-```
-@Table(name="email")
-public static class Email{
+```java
+@Table(name = "email")
+public static class Email {
   @Id
   public Integer emailId;
   public String email;
@@ -78,9 +78,9 @@ public static class Email{
 }
 ```
 Compound ids can be represented by putting the Id annotation on multiple fields
-```
-@Table(name="UserEmail")
-public static class UserEmail{
+```java
+@Table(name = "UserEmail")
+public static class UserEmail {
   @Id
   public Integer userId;
   @Id
@@ -89,14 +89,14 @@ public static class UserEmail{
 ```
 
 Knucklebones is method agnostic in the data objects, meaning that formatting or other logic an be stored in the struct directly. This is useful for situations such as enums
-```
-public enum MyEnum{
+```java
+public enum MyEnum {
   VALUE1,
   VALUE2
 }
 
-@Table(name="TableWithEnum")
-public static class SavedAsEnum{
+@Table(name = "TableWithEnum")
+public static class SavedAsEnum {
   @Id
   public String value;
 
@@ -110,9 +110,9 @@ Operations are performed using the methods exposed by the persistence
 
 ### Find
 Using the email example
-```
-@Table(name="email")
-public static class Email{
+```java
+@Table(name = "email")
+public static class Email {
   @Id
   public Integer emailId;
   public String email;
@@ -120,8 +120,8 @@ public static class Email{
 }
 ```
 a find may look like the following
-```
-try(Persistence p = factory.createPersistence()){
+```java
+try (Persistence p = factory.createPersistence()) {
   Email e = new Email();
   e.id = 1;//a known id
   Email found = p.find(e);//E is filled as a parameter, but the result can be assigned also if needed
