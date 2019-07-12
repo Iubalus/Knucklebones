@@ -67,7 +67,7 @@ public static class RowOfT {
 }
 ```
 This is the basic structure, from here more complex objects can be built.
-to represent a table that looks like email(_emailId_,emaile,verified) the structure may look like
+to represent a table that looks like email(_emailId_,email,verified) the structure may look like
 ```java
 @Table(name = "email")
 public static class Email {
@@ -129,3 +129,61 @@ try (Persistence p = factory.createPersistence()) {
   System.out.println(found.email);
 }
 ```
+
+### Insert
+An insert statement can be used to insert 1 or more entries into a table.
+```java
+try (Persistence p = factory.createPersistence()) {
+  MyRow r = new MyRow();
+  //fill r with data
+  p.insert(r);//List<MyRow> is also acceptable
+}
+```
+If MyRow has a generated id, it will be filled in upon insert. p.insert will also return an instance of MyRow with the generated id populated.
+
+### Update
+Update will save changes to an existing entry. If the entry being updated does not exist, no error will be raised and nothing will happen
+```java
+try (Persistence p = factory.createPersistence()) {
+  MyRow r = new MyRow();
+  r.someValue = "foo";
+  p.insert(r);
+  r.someValue = "bar";
+  p.update(r);
+}
+```
+
+### Delete
+Delete will remove an entry from the database. If the entry being deleted does not exist, delete will not raise an error, it will be treated as a success.
+```java
+public void deleteRow(MyRow existingEntry){
+  try (Persistence p = factory.createPersistence()) {
+    p.delete(existingEntry);
+  }
+}
+```
+
+### Transactions
+Persistence supports transactions. To perform operations in transactions, use the following form
+```java
+  Persistence p = factory.createPersistence();
+  try {
+    p.begin();
+    
+    //work done here is done in a transaction
+  
+    p.commit();
+  } catch (Exception e) {
+    p.rollback();
+    throw e;
+  } finally {
+    p.close();
+  }
+```
+## Credits
+ - Jubal Rife - [iubalus](https://github.com/iubalus)
+ - Will Lowery - [ToMakeItGo](https://github.com/tomakeitgo)
+
+## License
+
+Knucklebones is published under the [MIT](https://github.com/Iubalus/Knucklebones/blob/master/LICENSE) license.
