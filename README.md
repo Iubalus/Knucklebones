@@ -1,4 +1,5 @@
-# Knucklebones
+# Knucklebones <img src="logo.png" width="150" align="left">
+
 Knucklebones is a Java Object-Relational Mapping (ORM) library that attempts to simplify communication between java applications and a database.
 Knucklebones simplifies communication to the database by allowing scripts to be run and then filling java structures.
 
