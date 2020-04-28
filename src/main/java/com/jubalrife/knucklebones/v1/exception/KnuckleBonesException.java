@@ -3,15 +3,62 @@ package com.jubalrife.knucklebones.v1.exception;
 import com.jubalrife.knucklebones.v1.annotation.Id;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Stack;
 
 public class KnuckleBonesException extends RuntimeException {
 
+    /**
+     * By default, this will suppress the stacktrace coming from knucklebones and the supporting data layer below. The message will still be carried through.
+     * The intent of this is to help reduce noise as users are troubleshooting or developing.
+     * <p>
+     * When true, all com.jubalrife.knucklebones and above stacktrace elements will be removed from the stacktrace
+     * <p>
+     * When false, the entire stacktrace will be displayed.
+     */
+    public static boolean SHALLOW_STACKTRACE = true;
+
     public KnuckleBonesException(String message, Throwable cause) {
         super(message, cause);
+        if (SHALLOW_STACKTRACE) {
+            setStackTrace(filterToShallow(getStackTrace()));
+            getCause().setStackTrace(new StackTraceElement[]{});
+        }
     }
 
     public KnuckleBonesException(String message) {
         super(message);
+        if (SHALLOW_STACKTRACE) {
+            setStackTrace(filterToShallow(getStackTrace()));
+            getCause().setStackTrace(new StackTraceElement[]{});
+        }
+    }
+
+    private StackTraceElement[] filterToShallow(StackTraceElement[] stackTrace) {
+        boolean[] keep = new boolean[stackTrace.length];
+        int keepCount = 0;
+        boolean throwAway = true;
+        for (int i = 0; i < stackTrace.length; i++) {
+            boolean isKnucklebones = stackTrace[i].getClassName().startsWith("com.jubalrife.knucklebones");
+            throwAway &= !isKnucklebones;
+            if (throwAway) {
+                continue;//throw away the stacktrace above first knucklebones element
+            }
+            keep[i] = !isKnucklebones;//keep non-knucklebones trace entries after encountering first knucklebones element
+
+            if (keep[i]) {
+                keepCount++;
+            }
+        }
+        int fill = 0;
+        StackTraceElement[] trimmed = new StackTraceElement[keepCount];
+        for (int i = 0; i < stackTrace.length; i++) {
+            if (keep[i]) {
+                trimmed[fill++] = stackTrace[i];
+            }
+        }
+        return trimmed;
     }
 
     public static class PropertyInaccessible extends KnuckleBonesException {
