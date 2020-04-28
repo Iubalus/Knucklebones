@@ -14,6 +14,7 @@ public class PersistenceFactory {
     private final DataSource dataSource;
     private final Dialect dialect;
     private final DAOFactory factory;
+    private final SupportedTypesRegistered supportedTypes;
 
     /**
      * Creates a Persistence Factory backed by the provided datasource. A {@link GenericDialect} is used by default.
@@ -36,6 +37,14 @@ public class PersistenceFactory {
         this.dataSource = dataSource;
         this.dialect = dialect;
         this.factory = new DAOFactory();
+        this.supportedTypes = new SupportedTypesRegistered();
+    }
+
+    /**
+     * @return the {@link SupportedTypes} for this PersistenceFactory. A persistence created from this factory will inherit registered supported types.
+     */
+    public SupportedTypes getSupportedTypes() {
+        return supportedTypes;
     }
 
     /**
@@ -46,7 +55,7 @@ public class PersistenceFactory {
      */
     public Persistence create() {
         try {
-            return new Persistence(new PersistenceContext(dataSource.getConnection(), dialect, new SupportedTypesRegistered(), factory));
+            return new Persistence(new PersistenceContext(dataSource.getConnection(), dialect, supportedTypes.createCopy(), factory));
         } catch (SQLException e) {
             throw new KnuckleBonesException.CouldNotCreateConnection(e);
         }

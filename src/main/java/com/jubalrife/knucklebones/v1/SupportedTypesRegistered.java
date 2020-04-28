@@ -145,6 +145,17 @@ public class SupportedTypesRegistered implements SupportedTypes {
         registerType(null, (index, value, statement) -> statement.setObject(index, null));
     }
 
+    public SupportedTypesRegistered createCopy() {
+        SupportedTypesRegistered copy = new SupportedTypesRegistered();
+        for (Map.Entry<ExtractorKey, Extractor> registered : supported.entrySet()) {
+            copy.supported.put(registered.getKey(), registered.getValue());
+        }
+        for (Map.Entry<Class<?>, Refiner> registered : supportedRefiners.entrySet()) {
+            copy.supportedRefiners.put(registered.getKey(), registered.getValue());
+        }
+        return copy;
+    }
+
     public Extractor getExtractor(Integer type, Class<?> toType) {
         Extractor extractor = supported.get(new ExtractorKey(type, toType));
         if (extractor == null) {
