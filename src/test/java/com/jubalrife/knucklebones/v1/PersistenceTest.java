@@ -6,6 +6,7 @@ import com.jubalrife.knucklebones.v1.annotation.GeneratedValue;
 import com.jubalrife.knucklebones.v1.annotation.Id;
 import com.jubalrife.knucklebones.v1.annotation.Table;
 import com.jubalrife.knucklebones.v1.exception.KnuckleBonesException;
+import org.h2.jdbcx.JdbcConnectionPool;
 import org.junit.Test;
 
 import java.text.ParseException;
@@ -218,6 +219,20 @@ public class PersistenceTest extends WithInMemoryDB {
 
     }
 
+    @Test
+    public void inTransaction() {
+        ErrorHandlerSpy handled = new ErrorHandlerSpy();
+
+        PersistenceFactory factory = new PersistenceFactory(JdbcConnectionPool.create("jdbc:h2:mem:inTransactionTest", "sa", "sa"));
+        Persistence.inTransaction(factory, Persistence::begin, handled);
+        Persistence.inTransaction(factory, Persistence::rollback, handled);
+        Persistence.inTransaction(factory, Persistence::commit, handled);
+        Persistence.inTransaction(factory, Persistence::getConnection, handled);
+        Persistence.inTransaction(factory, Persistence::close, handled);
+
+        assertThat(handled.getHandled().size(), is(5));
+    }
+
     @Table(name = "TableA")
     public static class TableADAO {
         public Integer columnA;
@@ -262,5 +277,18 @@ public class PersistenceTest extends WithInMemoryDB {
         public Date startDate;
 
         public Date endDate;
+    }
+
+    private static class ErrorHandlerSpy implements Persistence.ErrorHandler {
+        private List<Exception> handled = new ArrayList<>();
+
+        @Override
+        public void accept(Exception e) {
+            handled.add(e);
+        }
+
+        public List<Exception> getHandled() {
+            return handled;
+        }
     }
 }

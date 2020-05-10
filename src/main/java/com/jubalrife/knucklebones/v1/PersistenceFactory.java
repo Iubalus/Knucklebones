@@ -70,10 +70,12 @@ public class PersistenceFactory {
      * Calling this method will create a active connection from the data source.
      *
      * @return a new {@link Persistence}
+     *
+     * @throws com.jubalrife.knucklebones.v1.exception.KnuckleBonesException.CouldNotCreateConnection if a connection cannot be established for the persistence
      */
     public Persistence create() {
         try {
-            return new Persistence(new PersistenceContext(connectionSupplier.create(), dialect, supportedTypes.createCopy(), factory));
+            return new PersistenceBase(new PersistenceContext(connectionSupplier.create(), dialect, supportedTypes.createCopy(), factory));
         } catch (Exception e) {
             throw new KnuckleBonesException.CouldNotCreateConnection(e);
         }

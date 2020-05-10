@@ -1,5 +1,6 @@
 package com.jubalrife.knucklebones.v1.exception;
 
+import com.jubalrife.knucklebones.v1.Persistence;
 import com.jubalrife.knucklebones.v1.annotation.Id;
 
 import java.lang.reflect.Field;
@@ -147,6 +148,12 @@ public class KnuckleBonesException extends RuntimeException {
     public static class ListParameterWasEmpty extends KnuckleBonesException {
         public ListParameterWasEmpty(String parameterName) {
             super(String.format("The parameter: [%s] was an empty Collection and could not be expanded.", parameterName));
+        }
+    }
+
+    public static class FeatureUnavailable extends KnuckleBonesException {
+        public FeatureUnavailable(String message) {
+            super(message);
         }
     }
 }

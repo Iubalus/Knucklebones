@@ -99,7 +99,7 @@ public class DAOTest extends WithInMemoryDB {
                 .executeQuery()) {
             List<HasInaccessibleProperties> a = new DAO<>(HasInaccessibleProperties.class).fillFromResultSet(
                     results,
-                    getPersistence().getSupportedTypesRegistered()
+                    (SupportedTypesRegistered) getPersistence().getSupportedTypes()
             );
             System.out.println(a);
         }
@@ -113,7 +113,7 @@ public class DAOTest extends WithInMemoryDB {
                 .executeQuery()) {
             List<Fillable> result = new DAO<>(Fillable.class).fillFromResultSet(
                     results,
-                    getPersistence().getSupportedTypesRegistered()
+                    (SupportedTypesRegistered) getPersistence().getSupportedTypes()
             );
             assertThat(result.size(), is(1));
             assertThat(result.get(0).a, is(1));

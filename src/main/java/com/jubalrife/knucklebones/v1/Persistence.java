@@ -3,18 +3,12 @@ package com.jubalrife.knucklebones.v1;
 import com.jubalrife.knucklebones.v1.exception.KnuckleBonesException;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
 
 /**
  * Created by calling {@link PersistenceFactory#create()}.
  */
-public class Persistence implements AutoCloseable {
-    private final PersistenceContext persistenceContext;
-
-    Persistence(PersistenceContext persistenceContext) {
-        this.persistenceContext = persistenceContext;
-    }
+public interface Persistence extends AutoCloseable {
 
     /**
      * Attempt to perform a SQL SELECT statement for the record specified.
@@ -24,10 +18,7 @@ public class Persistence implements AutoCloseable {
      * @param <ResultType> the type of the record to find
      * @return The record found.
      */
-    @SuppressWarnings("unchecked")
-    public <ResultType> ResultType find(ResultType record) {
-        return (ResultType) persistenceContext.find(record);
-    }
+    <ResultType> ResultType find(ResultType record);
 
     /**
      * Attempt to perform a SQL INSERT statement for the record provided.
@@ -36,17 +27,9 @@ public class Persistence implements AutoCloseable {
      * @param <ResultType> type of the record to insert.
      * @return the record inserted with its generated key.
      */
-    @SuppressWarnings("unchecked")
-    public <ResultType> ResultType insert(ResultType record) {
-        return (ResultType) persistenceContext.insert(record);
-    }
+    <ResultType> ResultType insert(ResultType record);
 
-    @SuppressWarnings("unchecked")
-    public <ResultType> void insert(List<ResultType> o) {
-        if (o.isEmpty()) return;
-
-        persistenceContext.insert((List<Object>) o);
-    }
+    <ResultType> void insert(List<ResultType> o);
 
     /**
      * Attempt to perform a SQL UPDATE statement using fields annotated with {@link com.jubalrife.knucklebones.v1.annotation.Id}
@@ -56,15 +39,9 @@ public class Persistence implements AutoCloseable {
      * @param record to update
      * @return the number of rows modified
      */
-    public int update(Object record) {
-        return persistenceContext.update(record);
-    }
+    int update(Object record);
 
-    @SuppressWarnings("unchecked")
-    public <Type> int update(List<Type> o) {
-        if (o.isEmpty()) return 0;
-        return persistenceContext.update((List<Object>) o);
-    }
+    <Type> int update(List<Type> o);
 
     /**
      * Attempt to perform a sql DELETE Statement using fields annotated with {@link com.jubalrife.knucklebones.v1.annotation.Id}
@@ -73,9 +50,7 @@ public class Persistence implements AutoCloseable {
      * @param record to delete
      * @return the number of entries deleted.
      */
-    public int delete(Object record) {
-        return persistenceContext.delete(record);
-    }
+    int delete(Object record);
 
     /**
      * Creating a native query will require a sql expression that can contain colon parameters.
@@ -87,9 +62,7 @@ public class Persistence implements AutoCloseable {
      * @param <ResultType> the type of the expected result(s)
      * @return a Native query to set parameters and retrieve results.
      */
-    public <ResultType> NativeQuery<ResultType> createNativeQuery(String query, Class<ResultType> type) {
-        return new NativeQueryImp<>(persistenceContext, type, query);
-    }
+    <ResultType> NativeQuery<ResultType> createNativeQuery(String query, Class<ResultType> type);
 
     /**
      * Creating a native query will require a sql expression that can contain colon parameters.
@@ -99,77 +72,73 @@ public class Persistence implements AutoCloseable {
      * @param query a string containing colon parameters.
      * @return a new {@link UncheckedNativeQuery}
      */
-    public UncheckedNativeQuery createNativeQuery(String query) {
-        return new UncheckedNativeQueryImp(persistenceContext, query);
-    }
+    UncheckedNativeQuery createNativeQuery(String query);
 
     /**
      * @return the {@link SupportedTypes} for this persistence.
      */
-    public SupportedTypes getSupportedTypes() {
-        return persistenceContext.getSupportedTypes();
-    }
-
-    SupportedTypesRegistered getSupportedTypesRegistered() {
-        return persistenceContext.getSupportedTypes();
-    }
+    SupportedTypes getSupportedTypes();
 
     /**
      * Modifying the underlying connection can lead to undefined behavior.
      *
      * @return the underlying {@link Connection}
      */
-    public Connection getConnection() {
-        return persistenceContext.getConnection();
-    }
+    Connection getConnection();
 
     /**
      * Calling this method will set the underlying connection to stop auto committing each statement.
      * {@link #commit()} or {@link #rollback()} must be called after this method to either keep or reject changes made in
      * the transaction that begin creates.
      */
-    public void begin() {
-        try {
-            persistenceContext.getConnection().setAutoCommit(false);
-        } catch (SQLException e) {
-            throw new KnuckleBonesException.CouldNotCreateATransaction(e);
-        }
-
-    }
+    void begin();
 
     /**
      * Calling this method will rollback the current transaction.
      * See {@link #begin()} to begin a transaction
      */
-    public void rollback() {
-        try {
-            persistenceContext.getConnection().rollback();
-        } catch (SQLException e) {
-            throw new KnuckleBonesException.CouldNotRollbackATransaction(e);
-        }
-    }
+    void rollback();
 
     /**
      * Calling this method will commit the current transaction.
      * See {@link #begin()} to begin a transaction
      */
-    public void commit() {
-        try {
-            persistenceContext.getConnection().commit();
-        } catch (SQLException e) {
-            throw new KnuckleBonesException.CouldNotCommitATransaction(e);
-        }
-    }
+    void commit();
 
     /**
      * Closes the underlying connection.
      */
-    public void close() {
-        try {
-            persistenceContext.getConnection().close();
-        } catch (SQLException e) {
-            throw new KnuckleBonesException("Unable to close connection.", e);
+    void close();
+
+    /**
+     * Utility which allows for atomic execution of provided logic using an isolated persistence.
+     *
+     * @param factory       is the {@link PersistenceFactory} which will supplie a {@link Persistence} for the duration of the transaction
+     * @param inTransaction will contain the work that must be done in a transaction.
+     * @param errorHandler  will consume Exceptions produced during execution of the transaction (both setup and execution)
+     * @throws KnuckleBonesException.FeatureUnavailable if begin, commit, rollback, or getConnection is called on the {@link Persistence} supplied to {@link TransactionWrappedOperation}.
+     */
+    static void inTransaction(PersistenceFactory factory, TransactionWrappedOperation inTransaction, ErrorHandler errorHandler) {
+        try (Persistence p = factory.create()) {
+            try {
+                p.begin();
+                inTransaction.run(new PersistenceAutoTransactionWrap(p));
+                p.commit();
+            } catch (Exception e) {
+                p.rollback();
+                throw e;
+            }
+        } catch (Exception e) {
+            errorHandler.accept(e);
         }
+    }
+
+    interface TransactionWrappedOperation {
+        void run(Persistence persistence) throws Exception;
+    }
+
+    interface ErrorHandler {
+        void accept(Exception e);
     }
 
     /**
@@ -180,7 +149,7 @@ public class Persistence implements AutoCloseable {
      * Results can be retrieved by either {@link NativeQuery#findSingleResult()} or
      * {@link NativeQuery#findResults()}
      */
-    public interface NativeQuery<ResultType> {
+    interface NativeQuery<ResultType> {
         /**
          * @param key   the name of the colon parameter in the query to replace
          * @param value the value to use when running the query
@@ -211,7 +180,7 @@ public class Persistence implements AutoCloseable {
      * Results can be retrieved by either {@link UncheckedNativeQuery#findSingleResult()} or
      * {@link UncheckedNativeQuery#findResults()}
      */
-    public interface UncheckedNativeQuery {
+    interface UncheckedNativeQuery {
         /**
          * @param key   the name of the colon parameter in the query to replace
          * @param value the value to use when running the query
