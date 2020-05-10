@@ -21,17 +21,20 @@ public class KnuckleBonesException extends RuntimeException {
 
     public KnuckleBonesException(String message, Throwable cause) {
         super(message, cause);
-        if (SHALLOW_STACKTRACE) {
-            setStackTrace(filterToShallow(getStackTrace()));
-            getCause().setStackTrace(new StackTraceElement[]{});
-        }
+        trimStacktrace();
     }
 
     public KnuckleBonesException(String message) {
         super(message);
+        trimStacktrace();
+    }
+
+    private void trimStacktrace() {
         if (SHALLOW_STACKTRACE) {
             setStackTrace(filterToShallow(getStackTrace()));
-            getCause().setStackTrace(new StackTraceElement[]{});
+            if (getCause() != null) {
+                getCause().setStackTrace(new StackTraceElement[]{});
+            }
         }
     }
 

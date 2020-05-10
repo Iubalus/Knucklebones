@@ -5,16 +5,16 @@ import com.jubalrife.knucklebones.v1.dialect.generic.GenericDialect;
 import com.jubalrife.knucklebones.v1.exception.KnuckleBonesException;
 
 import javax.sql.DataSource;
-import java.sql.SQLException;
+import java.sql.Connection;
 
 /**
  * Factory used to construct {@link Persistence}.
  */
 public class PersistenceFactory {
-    private final DataSource dataSource;
+    private final ConnectionFactory connectionSupplier;
     private final Dialect dialect;
-    private final DAOFactory factory;
-    private final SupportedTypesRegistered supportedTypes;
+    private final DAOFactory factory = new DAOFactory();
+    private final SupportedTypesRegistered supportedTypes = new SupportedTypesRegistered();
 
     /**
      * Creates a Persistence Factory backed by the provided datasource. A {@link GenericDialect} is used by default.
@@ -34,10 +34,28 @@ public class PersistenceFactory {
      * @param dialect    used when generating sql
      */
     public PersistenceFactory(DataSource dataSource, Dialect dialect) {
-        this.dataSource = dataSource;
+        this.connectionSupplier = dataSource::getConnection;
         this.dialect = dialect;
-        this.factory = new DAOFactory();
-        this.supportedTypes = new SupportedTypesRegistered();
+    }
+
+    /**
+     * Creates a Persistence Factory backed by the provided connection
+     *
+     * @param connectionFactory a factory for producing connections (fresh connections should be provided every time since {@link Persistence} will close connections supplied in this way)
+     */
+    public PersistenceFactory(ConnectionFactory connectionFactory) {
+        this(connectionFactory, new GenericDialect());
+    }
+
+    /**
+     * Creates a Persistence Factory backed by the provided connection and {@link Dialect}
+     *
+     * @param connectionFactory a factory for producing connections (fresh connections should be provided every time since {@link Persistence} will close connections supplied in this way)
+     * @param dialect used when generating sql
+     */
+    public PersistenceFactory(ConnectionFactory connectionFactory, Dialect dialect){
+        this.connectionSupplier = connectionFactory;
+        this.dialect = dialect;
     }
 
     /**
@@ -55,9 +73,14 @@ public class PersistenceFactory {
      */
     public Persistence create() {
         try {
-            return new Persistence(new PersistenceContext(dataSource.getConnection(), dialect, supportedTypes.createCopy(), factory));
-        } catch (SQLException e) {
+            return new Persistence(new PersistenceContext(connectionSupplier.create(), dialect, supportedTypes.createCopy(), factory));
+        } catch (Exception e) {
             throw new KnuckleBonesException.CouldNotCreateConnection(e);
         }
     }
+
+    public interface ConnectionFactory{
+        Connection create() throws Exception;
+    }
+
 }
