@@ -29,6 +29,10 @@ public class SupportedTypesRegistered implements SupportedTypes {
         registerType(Types.TINYINT, Boolean.TYPE, new NumericToBool());
         registerType(Types.BIT, Boolean.TYPE, new NumericToBool());
         registerType(Types.BOOLEAN, Boolean.TYPE, new NumericToBool());
+        registerType(Types.LONGVARBINARY, byte[].class, (index, result) -> result.getBytes(index));
+        registerType(Types.VARBINARY, byte[].class, (index, result) -> result.getBytes(index));
+        registerType(Types.BINARY, byte[].class, (index, result) -> result.getBytes(index));
+        registerType(Types.CHAR, String.class, (index, result) -> result.getString(index));
 
         registerType(Types.BIGINT, Long.class, new LongExtractor());
         registerType(Types.BIGINT, Long.TYPE, new LongPrimitiveExtractor());
@@ -128,6 +132,8 @@ public class SupportedTypesRegistered implements SupportedTypes {
 
         registerType(Byte.TYPE, (index, value, statement) -> statement.setInt(index, (byte) value));
         registerType(Byte.class, (index, value, statement) -> statement.setObject(index, value));
+        registerType(byte[].class, (index, value, statement) -> statement.setBytes(index, (byte[]) value));
+
         registerType(Short.TYPE, (index, value, statement) -> statement.setInt(index, (short) value));
         registerType(Short.class, (index, value, statement) -> statement.setObject(index, value));
         registerType(Integer.TYPE, (index, value, statement) -> statement.setInt(index, (int) value));
