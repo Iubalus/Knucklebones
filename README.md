@@ -188,3 +188,6 @@ Persistence supports transactions. To perform operations in transactions, use th
 ## License
 
 Knucklebones is published under the [MIT](https://github.com/Iubalus/Knucklebones/blob/master/LICENSE) license.
+
+## Release Notes
+ - [1.1.0](https://github.com/Iubalus/Knucklebones/wiki/Release-Notes-1.1.0)
