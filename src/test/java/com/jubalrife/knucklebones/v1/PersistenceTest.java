@@ -7,6 +7,7 @@ import com.jubalrife.knucklebones.v1.annotation.Id;
 import com.jubalrife.knucklebones.v1.annotation.Table;
 import com.jubalrife.knucklebones.v1.exception.KnuckleBonesException;
 import org.h2.jdbcx.JdbcConnectionPool;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.text.ParseException;
@@ -220,7 +221,95 @@ public class PersistenceTest extends WithInMemoryDB {
     }
 
     @Test
-    public void inTransaction() {
+    public void inTransaction_canPerformActionInTransaction() {
+        ErrorHandlerSpy handled = new ErrorHandlerSpy();
+
+        PersistenceFactory factory = new PersistenceFactory(JdbcConnectionPool.create("jdbc:h2:mem:inTransactionTest", "sa", "sa"));
+        Persistence.inTransaction(factory, p -> p.createNativeQuery("CREATE TABLE T1 (Example INT)").executeUpdate(), handled);
+        assertThat(handled.getHandled().isEmpty(), is(true));
+
+        factory.inTransaction(p -> p.createNativeQuery("CREATE TABLE T2 (Example INT)").executeUpdate(), handled);
+        assertThat(handled.getHandled().isEmpty(), is(true));
+
+        try (Persistence per = factory.create()) {
+            per.inTransaction(p -> p.createNativeQuery("CREATE TABLE T3 (Example INT)").executeUpdate(), handled);
+        }
+        assertThat(handled.getHandled().isEmpty(), is(true));
+
+        //tables exist outside of the transaction
+        try (Persistence per = factory.create()) {
+            assertThat(per.createNativeQuery("SELECT COUNT(*) FROM T1").findSingleResult(), is(0L));
+            assertThat(per.createNativeQuery("SELECT COUNT(*) FROM T2").findSingleResult(), is(0L));
+            assertThat(per.createNativeQuery("SELECT COUNT(*) FROM T3").findSingleResult(), is(0L));
+        }
+    }
+
+    /**
+     * I wrote this test to determine that transactions were rolling back appropriately and discovered
+     * that the h2 database might not actually support transactions in the way I expected. I will do
+     * further investigation to determine if there is anything I can do about this.
+     *
+     * So far as I know, the persistenceContext.getConnection().setAutoCommit(false); in {@link PersistenceBase}
+     * should begin a transaction in normal database connections. It just doesn't appear that h2 honors that.
+     *
+     * I am going to keep this test for when I figure out a workaround (I may have to use a different db driver)
+     */
+    @Test
+    @Ignore
+    public void inTransaction_doesRollbackOnError() {
+        ErrorHandlerSpy handled = new ErrorHandlerSpy();
+
+        PersistenceFactory factory = new PersistenceFactory(JdbcConnectionPool.create("jdbc:h2:mem:inTransactionTest", "sa", "sa"));
+        Persistence.inTransaction(
+                factory,
+                p -> {
+                    p.createNativeQuery("CREATE TABLE T1 (Example INT)").executeUpdate();
+                    p.createNativeQuery("INSERT INTO T1 (Example) VALUES (1),(2)").executeUpdate();
+                },
+                handled
+        );
+
+        try (Persistence per = factory.create()) {
+            assertThat(per.createNativeQuery("SELECT COUNT(*) FROM T1").findSingleResult(), is(2L));
+        }
+
+        Persistence.inTransaction(
+                factory,
+                p -> {
+                    p.createNativeQuery("TRUNCATE TABLE T1").executeUpdate();
+                    throw new RuntimeException("Fail");
+                },
+                handled
+        );
+        assertThat(handled.getHandled().size(), is(1));
+
+        factory.inTransaction(
+                p -> {
+                    p.createNativeQuery("TRUNCATE TABLE T1").executeUpdate();
+                    throw new RuntimeException("Fail");
+                },
+                handled
+        );
+        assertThat(handled.getHandled().size(), is(2));
+
+        try (Persistence per = factory.create()) {
+            per.inTransaction(
+                    p -> {
+                        p.createNativeQuery("TRUNCATE TABLE T1").executeUpdate();
+                        throw new RuntimeException("Fail");
+                    },
+                    handled
+            );
+        }
+        assertThat(handled.getHandled().size(), is(3));
+
+        try (Persistence per = factory.create()) {
+            assertThat(per.createNativeQuery("SELECT COUNT(*) FROM T1").findSingleResult(), is(2L));
+        }
+    }
+
+    @Test
+    public void inTransaction_expectErrorsWhenRestrictedFunctionsAreCalled() {
         ErrorHandlerSpy handled = new ErrorHandlerSpy();
 
         PersistenceFactory factory = new PersistenceFactory(JdbcConnectionPool.create("jdbc:h2:mem:inTransactionTest", "sa", "sa"));
@@ -229,8 +318,27 @@ public class PersistenceTest extends WithInMemoryDB {
         Persistence.inTransaction(factory, Persistence::commit, handled);
         Persistence.inTransaction(factory, Persistence::getConnection, handled);
         Persistence.inTransaction(factory, Persistence::close, handled);
+        Persistence.inTransaction(factory, (p) -> p.inTransaction(p2 -> {}, e2 -> {}), handled);
+        assertThat(handled.getHandled().size(), is(6));
 
-        assertThat(handled.getHandled().size(), is(5));
+        factory.inTransaction(Persistence::begin, handled);
+        factory.inTransaction(Persistence::rollback, handled);
+        factory.inTransaction(Persistence::commit, handled);
+        factory.inTransaction(Persistence::getConnection, handled);
+        factory.inTransaction(Persistence::close, handled);
+        factory.inTransaction((p) -> p.inTransaction(p2 -> {}, e2 -> {}), handled);
+        assertThat(handled.getHandled().size(), is(12));
+
+        try (Persistence per = factory.create()) {
+            per.inTransaction(Persistence::begin, handled);
+            per.inTransaction(Persistence::rollback, handled);
+            per.inTransaction(Persistence::commit, handled);
+            per.inTransaction(Persistence::getConnection, handled);
+            per.inTransaction(Persistence::close, handled);
+            per.inTransaction((p) -> p.inTransaction(p2 -> {}, e2 -> {}), handled);
+        }
+
+        assertThat(handled.getHandled().size(), is(18));
     }
 
     @Table(name = "TableA")

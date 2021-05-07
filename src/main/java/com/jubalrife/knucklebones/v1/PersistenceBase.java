@@ -60,6 +60,27 @@ class PersistenceBase implements Persistence {
         return persistenceContext.getConnection();
     }
 
+    @Override
+    public void inTransaction(TransactionWrappedOperation inTransaction, ErrorHandler errorHandler) {
+        try {
+            try {
+                begin();
+                inTransaction.run(new PersistenceAutoTransactionWrap(this));
+                commit();
+            } catch (Exception e) {
+                try {
+                    rollback();
+                } catch (Exception e2) {
+                    e2.addSuppressed(e);
+                    throw e2;
+                }
+                throw e;
+            }
+        } catch (Exception e) {
+            errorHandler.accept(e);
+        }
+    }
+
     public void begin() {
         try {
             persistenceContext.getConnection().setAutoCommit(false);

@@ -82,4 +82,9 @@ class PersistenceAutoTransactionWrap implements Persistence {
     public void close() {
         throw new KnuckleBonesException.FeatureUnavailable("close is not available from inside Persistence.inTransaction");
     }
+
+    @Override
+    public void inTransaction(TransactionWrappedOperation inTransaction, ErrorHandler errorHandler) {
+        throw new KnuckleBonesException.FeatureUnavailable("inTransaction is not available from inside Persistence.inTransaction");
+    }
 }

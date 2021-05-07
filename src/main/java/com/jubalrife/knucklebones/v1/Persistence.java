@@ -116,22 +116,21 @@ public interface Persistence extends AutoCloseable {
      * @param factory       is the {@link PersistenceFactory} which will supplie a {@link Persistence} for the duration of the transaction
      * @param inTransaction will contain the work that must be done in a transaction.
      * @param errorHandler  will consume Exceptions produced during execution of the transaction (both setup and execution)
-     * @throws KnuckleBonesException.FeatureUnavailable if begin, commit, rollback, or getConnection is called on the {@link Persistence} supplied to {@link TransactionWrappedOperation}.
+     * @throws KnuckleBonesException.FeatureUnavailable if begin, commit, rollback, inTransaction, or getConnection is called on the {@link Persistence} supplied to {@link TransactionWrappedOperation}.
      */
     static void inTransaction(PersistenceFactory factory, TransactionWrappedOperation inTransaction, ErrorHandler errorHandler) {
-        try (Persistence p = factory.create()) {
-            try {
-                p.begin();
-                inTransaction.run(new PersistenceAutoTransactionWrap(p));
-                p.commit();
-            } catch (Exception e) {
-                p.rollback();
-                throw e;
-            }
-        } catch (Exception e) {
-            errorHandler.accept(e);
-        }
+        factory.inTransaction(inTransaction, errorHandler);
     }
+
+    /**
+     * This will use the persistence it is called from to perform an operation in a transaction
+     * The persistence will not be closed when the operation is completed
+     *
+     * @param inTransaction will contain the work to be completed in a transaction
+     * @param errorHandler will consume exceptions produced during execution of the transaction
+     * @throws KnuckleBonesException.FeatureUnavailable if begin, commit, rollback, inTransaction, or getConnection is called on the {@link Persistence} supplied to {@link TransactionWrappedOperation}.
+     */
+    void inTransaction(TransactionWrappedOperation inTransaction, ErrorHandler errorHandler);
 
     interface TransactionWrappedOperation {
         void run(Persistence persistence) throws Exception;

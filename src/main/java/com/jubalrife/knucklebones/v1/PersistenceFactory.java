@@ -66,6 +66,20 @@ public class PersistenceFactory {
     }
 
     /**
+     * Utility which allows for atomic execution of provided logic using an isolated persistence.
+     * Persistence used will be produced by this factory and closed when the transaction has completed
+     *
+     * @param inTransaction will contain the work that must be done in a transaction.
+     * @param errorHandler  will consume Exceptions produced during execution of the transaction (both setup and execution)
+     * @throws KnuckleBonesException.FeatureUnavailable if begin, commit, rollback, inTransaction, or getConnection is called on the {@link Persistence} supplied to {@link Persistence.TransactionWrappedOperation}.
+     */
+    public void inTransaction(Persistence.TransactionWrappedOperation inTransaction, Persistence.ErrorHandler errorHandler) {
+        try (Persistence p = create()) {
+            p.inTransaction(inTransaction, errorHandler);
+        }
+    }
+
+    /**
      * Creates a {@link Persistence} from the underlying {@link DataSource}.
      * Calling this method will create a active connection from the data source.
      *
