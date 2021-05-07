@@ -165,22 +165,63 @@ public void deleteRow(MyRow existingEntry){
 ```
 
 ### Transactions
-Persistence supports transactions. To perform operations in transactions, use the following form
+
+>Please note that the transaction handling is done using the Connection.setAutoCommit(false) Depending on the Datasource, this may or may not function as expected. I have observed that this does _not_ function as expected with regards to the h2 in memory database
+
+Persistence supports transactions. It is possible to manually handle transactions as follows
 ```java
-  Persistence p = factory.createPersistence();
-  try {
-    p.begin();
-    
-    //work done here is done in a transaction
+Persistence p = factory.createPersistence();
+try {
+  p.begin();
   
-    p.commit();
-  } catch (Exception e) {
+  //work done here is done in a transaction
+  
+  p.commit();
+} catch (Exception e) {
+  try {
     p.rollback();
-    throw e;
-  } finally {
-    p.close();
+  } catch (Exception e2) {
+    e2.addSuppressed(e);
+    throw e2;
   }
+  throw e;
+} finally {
+  p.close();
+}
 ```
+As of version 1.1.0 there is a static method on Persistence which simplifies using transactions
+```java
+Persistence.inTransaction(
+  factory,
+  p->{
+    //work is done here in a transaction
+  },
+  e->{}//this is an error handler that accepts Exception. Any exception thrown during the transaction can be handled here
+}
+```
+
+As of version 1.2.0, this has been refined to be even more simple
+Given an existing persistence, we can perform a transaction as
+```java
+persistence.inTransaction(
+  p->{
+    //do work here using the Persistence p
+  },
+  e-{}//handle errors
+}
+```
+Or using an instance of the factory
+```java
+factory.inTransaction(
+  p->{
+    //do work here using the Persistence p
+  },
+  e-{}//handle errors
+}
+```
+
+The persistence passed to inTransaction has specific guards on it which will throw an exception if close, begin, rollback, commit, or inTransaction are called on it (because these could allow it to escape the transaction wrap)
+
 ## Credits
  - Jubal Rife - [iubalus](https://github.com/iubalus)
  - Will Lowery - [ToMakeItGo](https://github.com/tomakeitgo)
