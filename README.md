@@ -170,7 +170,8 @@ public void deleteRow(MyRow existingEntry){
 
 Persistence supports transactions. It is possible to manually handle transactions as follows
 ```java
-try (Persistence p = factory.createPersistence()) {
+Persistence p = factory.createPersistence();
+try {
   p.begin();
   
   //work done here is done in a transaction
@@ -184,6 +185,8 @@ try (Persistence p = factory.createPersistence()) {
     throw e2;
   }
   throw e;
+} finally {
+  p.close();
 }
 ```
 As of version 1.1.0 there is a static method on Persistence which simplifies using transactions
